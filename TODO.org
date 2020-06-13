@@ -1,0 +1,43 @@
+#+STARTUP: showeverything
+
+* Programs todos
+** TODO See below
+
+* Package todos
+** TODO Add author, copyright, etc. tags
+** TODO Add example .json (and include in MANIFEST.in)
+https://python-packaging.readthedocs.io/en/latest/non-code-files.html
+** TODO  systemd installer method
+
+
+* Outline of program
+
+- [ ] control variables and constants
+- [ ] read in config files
+  - [ ] API (Nest, OWM and Dark Sky) and I2C config
+- [ ] map values to variables
+- [ ] initialize Hardware wrappers
+- [ ] initialize API wrappers (phant, dark sky, OWM, Nest)
+- [ ] Loop
+  - [ ] read sensors
+  - [ ] Read APIs, in turn, if enabled
+    - [ ] Dark Sky
+    - [ ] Open Weather Map
+    - [ ] Nest
+  - [ ] Alternate display the enabled temperatures
+  - [ ] Delay loop
+  - [ ] Log information
+    - [ ] Do at explicit intervals
+    - [ ] ... only if information source is enabled
+  - [ ] finally: clause in loop (for exit)
+
+** system-related
+
+- [ ] systemd installer
+- [X] requirements / dependency management installer
+
+** functions
+
+- [ ] display_temperature_in_fahrenheit()
+- [ ] log_error()
+- [ ] Signal, Keyboardinterrupt handler
