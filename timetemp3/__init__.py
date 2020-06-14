@@ -1,6 +1,5 @@
 
 import time
-import datetime
 
 from Adafruit_LED_Backpack import SevenSegment
 
@@ -11,16 +10,16 @@ DIGIT_3 = 2
 DIGIT_4 = 3
 DIGIT_COLON = 4
 
-# Set to 12 or 24 hour mode
-HOUR_MODE_12_OR_24 = 12
+# Default to 12 or 24 hour mode
+CLOCK_HOUR_MODE_12_OR_24 = 12
 
-# I2C address of display
-LED_SEGMENT_I2C_ADDRESS = 0x70
+# Default I2C address of display
+CLOCK_LED_SEGMENT_I2C_ADDRESS = 0x70
 
-# Number of seconds to wait after display is written
-DISPLAY_SLEEP_DURATION = 1/4 
+# Default number of seconds to wait after display is written
+CLOCK_DISPLAY_SLEEP_DURATION = 1/4 
 
-def get_time_digits( now, hour_mode = HOUR_MODE_12_OR_24, toggle_colon = True):
+def get_time_digits( now, hour_mode = CLOCK_HOUR_MODE_12_OR_24, toggle_colon = True):
     digits = [None] * 5
     hour = now.hour
     minute = now.minute
@@ -53,14 +52,14 @@ def get_time_digits( now, hour_mode = HOUR_MODE_12_OR_24, toggle_colon = True):
     return digits
 
 
-def initialize_and_get_time_display_handle (i2c_address = LED_SEGMENT_I2C_ADDRESS):
+def initialize_and_get_time_display_handle (i2c_address = CLOCK_LED_SEGMENT_I2C_ADDRESS):
     segment = SevenSegment.SevenSegment(address=i2c_address)
     # Initialize display. Must be called once before using the display.
     segment.begin()
-    print("Using time display I2C address: 0x%02x" % (i2c_address,))
+    print("Using clock display I2C address: 0x%02x" % (i2c_address,))
     return segment
 
-def display_time_digits(time_digits, sleep_duration = DISPLAY_SLEEP_DURATION, display_handle = None):
+def display_time_digits(time_digits, sleep_duration = CLOCK_DISPLAY_SLEEP_DURATION, display_handle = None):
     segment = display_handle
 
     if segment:
