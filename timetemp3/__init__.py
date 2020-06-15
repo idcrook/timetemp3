@@ -48,6 +48,7 @@ def initialize_and_get_time_display_handle(i2c_address=CLOCK_LED_SEGMENT_I2C_ADD
     # Initialize display. Must be called once before using the display.
     segment.begin()
     print("Using clock display I2C address: 0x%02x" % (i2c_address,))
+    # print(segment)
     return segment
 
 

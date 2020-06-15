@@ -6,7 +6,7 @@ import os
 import signal
 from sys import exit
 
-from . import initialize_and_get_time_display_handle, get_time_digits, display_time_digits
+from timetemp3 import initialize_and_get_time_display_handle, get_time_digits, display_time_digits
 
 # To run: python3 ./my_7segment_clock.py
 
@@ -76,3 +76,7 @@ def main():
             time.sleep(2)
 
     graceful_exit()
+
+# added in case script is run directly
+if __name__ == '__main__':
+    main()

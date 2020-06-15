@@ -1,0 +1,30 @@
+
+[Unit]
+Description=TimeTemp clock display
+After=network.target time-sync.target
+ConditionPathExists=/home/pi/projects/timetemp3
+
+[Service]
+#WorkingDirectory=/home/pi/projects/timetemp3/
+# actual location: /home/pi/projects/timetemp3/timetemp3/my_7segment_clock.py
+ExecStart=/usr/bin/python3 /home/pi/.local/bin/timetemp_7segment_clock
+# do not buffer output (useful for debugging)
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+
+# install user unit file
+# - assumes git clone at /home/pi/projects/timetemp3/ and has been installed by pip
+# 
+#  cd /home/pi/projects/timetemp3/
+# refer to https://www.freedesktop.org/software/systemd/man/systemd.unit.html#User%20Unit%20Search%20Path
+#  MY_SYSTEMD_USER_UNIT_DIR=/home/pi/.config/systemd/user/
+#  mkdir -p "${MY_SYSTEMD_USER_UNIT_DIR}"
+#  cp -av etc/timetemp_7segment_clock.service "${MY_SYSTEMD_USER_UNIT_DIR}"
+#  systemctl --user daemon-reload
+#  systemctl --user start timetemp_7segment_clock
+#  systemctl --user status timetemp_7segment_clock
+#  systemctl --user enable timetemp_7segment_clock  
+#
+#  journalctl --user-unit timetemp_7segment_clock
