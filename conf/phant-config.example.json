@@ -1,0 +1,9 @@
+{
+  "title": "sensor_stream",
+  "outputUrl": "https://phant.example.com/output/PUBLIC_KEY",
+  "inputUrl": "https://phant.example.com/input/PUBLIC_KEY",
+  "manageUrl": "https://phant.example.com/streams/PUBLIC_KEY",
+  "publicKey": "PUBLIC_KEY",
+  "privateKey": "PRIVATE_KEY",
+  "deleteKey": "DELETE_KEY"
+}

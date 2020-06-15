@@ -1,0 +1,20 @@
+{
+  "timetemp_nest": {
+    "client_secret": "yturkd7",
+    "client_id": "d-e-4f-i"
+  },
+  "owm": {
+    "lon": -100.0,
+    "lat": 45.0,
+    "secret-key": "abcd"
+  },
+  "darksky": {
+    "lng": -100.0,
+    "lat": 45.0,
+    "secret-key": "abcd"
+  },
+  "i2c_addresses": {
+    "i2c_led": "0x70",
+    "bmp085": "0x77"
+  }
+}
