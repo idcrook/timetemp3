@@ -1,10 +1,10 @@
 #+STARTUP: showeverything
 
 * Programs todos
-** TODO See below
+** See below
 
 * Package todos
-** TODO Add author, copyright, etc. tags
+** DONE Add author, copyright, etc. tags
 ** DONE Add example .json
 https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 ** DONE systemd installer method
