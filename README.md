@@ -4,6 +4,8 @@ Monitor and display time/temp with RasPi and log to cloud
 
 ## Install
 
+Install pre-reqs and dependencies
+
 ```shell
 # python and build system dependencies
 sudo apt install -y git build-essential python3-setuptools python3-dev \
@@ -18,9 +20,43 @@ sudo apt install python3-smbus python3-pil
 # work-around for missing geojson dependency in current pyowm development
 pip3 install --user geojson
 
-# now for the fun part
+```
+
+now for the fun part
+
+```shell
+mkdir ~/projects
+cd ~/projects
+git clone https://github.com/idcrook/timetemp3.git
+cd timetemp3
+
+# perform the python setup, which also includes dependencies
 pip3 install .
 # for development, use instead # pip3 install -e .
+```
+
+## Run
+
+The i2c addresses in the scripts and config  files may need to be updated for your hardware.
+
+```
+cd ~/projects/timetemp3
+cp conf/weather_logging_config.example.json conf/weather_logging_config.json
+# edit conf/weather_logging_config.json
+touch conf/phant-config.json
+# replace conf/phant-config.json with a phant data source config file
+```
+
+Assuming your system is setup to include `~/.local/bin` in `$PATH`, can run the `timetemp_*` wrapper scripts the Python `setup.py` installed
+
+```shell
+cd ~/projects/timetemp3
+
+timetemp_7segment_clock
+# <Ctrl-C> to exit
+
+timetemp_weather_logging conf/weather_logging_config.json conf/phant-config.json
+# <Ctrl-C> to exit
 ```
 
 ## Run as systemd service
@@ -55,3 +91,7 @@ journalctl --user-unit timetemp_weather_logging.service
 systemctl --user enable timetemp_7segment_clock
 systemctl --user enable timetemp_weather_logging
 ```
+
+# TODO
+
+See [TODO.org](TODO.org)
