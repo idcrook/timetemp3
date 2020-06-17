@@ -19,7 +19,6 @@ sudo apt install python3-smbus python3-pil
 
 # work-around for missing geojson dependency in current pyowm development
 pip3 install --user geojson
-
 ```
 
 now for the fun part
@@ -39,7 +38,7 @@ pip3 install .
 
 The i2c addresses in the scripts and config  files may need to be updated for your hardware.
 
-```
+```shell
 cd ~/projects/timetemp3
 cp conf/weather_logging_config.example.json conf/weather_logging_config.json
 # edit conf/weather_logging_config.json
