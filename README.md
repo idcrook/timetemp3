@@ -2,32 +2,30 @@
 
 Monitor and display time/temp with RasPi and log to cloud
 
-
 ## Install
 
 ```shell
+# python and build system dependencies
 sudo apt install -y git build-essential python3-setuptools python3-dev \
-    python3-pip python3-venv python3-wheel 
+    python3-pip python3-venv python3-wheel
 
-# for systemd installs
+# for extra systemd functionality (not yet implemented)
 sudo apt install python3-systemd
 
 # additional system dependencies for Adafruit-LED-Backpack
 sudo apt install python3-smbus python3-pil
 
-# work-around for missing geojson dependency
+# work-around for missing geojson dependency in current pyowm development
 pip3 install --user geojson
 
 # now for the fun part
 pip3 install .
 # for development, use instead # pip3 install -e .
-
 ```
-
 
 ## Run as systemd service
 
-On my Raspberry Pi OS system, `groups` includes "`gpio i2c`" so these services do not need to run as root user. 
+On my Raspberry Pi OS system, `groups` includes "`gpio i2c`" so these services do not need to run as root user.
 
 Install user unit file.  Assumes git clone at `/home/pi/projects/timetemp3/` and has been installed
 

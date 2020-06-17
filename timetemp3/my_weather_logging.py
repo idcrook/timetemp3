@@ -11,9 +11,11 @@ import time
 
 # import datetime
 import json
+import pathlib
 from pprint import pprint
 import signal
 import ssl
+from threading import Event
 import requests  # so can handle exceptions
 
 from timetemp3 import (
@@ -25,6 +27,10 @@ from timetemp3 import (
 
 from phant3.Phant import Phant
 
+# FIXME: Refactor into timetemp3/__init__.py
+import nest  # https://github.com/jkoelker/python-nest/
+
+
 usage = """
     script app_config_json phant_config_json
 """
@@ -32,35 +38,47 @@ usage = """
 # Logging sensor readings to Phant
 LOGGING = True
 # LOGGING = False
-LOGGING_COUNT = 0
+LOGGING_COUNT = -1
+
+# Approximately how often sensor measurements are made (in seconds)
+SENSOR_MEASUREMENT_INTERVAL = 15
+
+# How long to wait (in seconds) between uploading measurements.
+LOGGING_PERIOD_SECONDS = 5 * 60
+
+# Default time to wait before hitting API again.
+WEBAPI_PERIOD_SECONDS = 5 * 60
 
 # Use Open Weather Map API for local weather - https://openweathermap.org/api https://openweathermap.org/api/one-call-api
 OWM_API = True
 # OWM_API = False
+OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # Use Nest API for another indoor temperature source
 NEST_API = True
 # NEST_API = False
-
-# How long to wait (in seconds) between logging measurements.
-LOGGING_PERIOD_SECONDS = 300
-
-# How often to hit the web APIs
-WEBAPI_PERIOD_SECONDS = 300
+NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # How long to wait (in seconds) between temperature locations
-ALTERNATE_TEMP_SCALE_SECONDS = 5
+ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 5
+ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
+UPDATE_LOCATION_INTERVALS = (SENSOR_MEASUREMENT_INTERVAL, OWM_REFRESH_INTERVAL, NEST_REFRESH_INTERVAL, )
+UPDATE_PREVIOUS_TIMES = [None] * len(ALTERNATE_TEMPERATURE_LOCATIONS)
 
-# Approximately how often measurements are made (in seconds)
-MEASUREMENT_INTERVAL = 3 * ALTERNATE_TEMP_SCALE_SECONDS
-
-# How seldom to upload the sensor log data, if LOGGING is on (in
-# MEASUREMENT_INTERVALs)
-COUNT_INTERVAL = LOGGING_PERIOD_SECONDS / MEASUREMENT_INTERVAL
+# Initalize recordkeeping for updates
+UPDATE_CYCLE_NUMBERS = [-1 for i in range(len(ALTERNATE_TEMPERATURE_LOCATIONS))]
+# Use -1 to represent that update is always requests if not yet initialized
 
 BMP_ADDRESS = 0x77
-LED_DISPLAY_ADDRESS = 0x70  # 0x71
+LED_DISPLAY_ADDRESS = 0x71
 DISPLAY_SLEEP_DURATION = 1 / 100
+VERBOSE_BMP_READINGS = True
+
+UNINITIALIZED_READING = -100.0
+RECENT_READINGS = { ALTERNATE_TEMPERATURE_LOCATIONS[0] : UNINITIALIZED_READING,
+    ALTERNATE_TEMPERATURE_LOCATIONS[1] : UNINITIALIZED_READING,
+    ALTERNATE_TEMPERATURE_LOCATIONS[2] : UNINITIALIZED_READING, 
+}
 
 try:
     app_config_json = sys.argv[1]
@@ -71,7 +89,6 @@ except:
 
 print(app_config_json)
 print(phant_config_json)
-
 
 def convert_json_string_to_hexadecimal_value(s):
     value = 0
@@ -90,10 +107,10 @@ pprint(config["i2c_addresses"])
 
 bmp_address = convert_json_string_to_hexadecimal_value(
     config["i2c_addresses"]["bmp085"]
-)
+) or BMP_ADDRESS
 led_display_address = convert_json_string_to_hexadecimal_value(
     config["i2c_addresses"]["i2c_led"]
-)
+) or LED_DISPLAY_ADDRESS
 
 owm_secret_key = config["owm"]["secret-key"]
 owm_lat = config["owm"]["lat"]
@@ -101,13 +118,17 @@ owm_lon = config["owm"]["lon"]
 
 nest_client_id = config['timetemp_nest']['client_id']
 nest_client_secret = config['timetemp_nest']['client_secret']
+# FIXME: more rrobustly form/check path
 nest_access_token_cache_file = 'nest.json'
 
 # Create display instance
-segment = initialize_and_get_temperature_display_handle(i2c_address=LED_DISPLAY_ADDRESS)
+segment = initialize_and_get_temperature_display_handle(
+    i2c_address=led_display_address)
 
 # Create sensor instance
-bmp = get_temperature_sensor_handle(i2c_address=BMP_ADDRESS)
+bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
+
+print(   pathlib.Path().absolute())
 
 if LOGGING:
     # Read in Phant config file
@@ -115,78 +136,193 @@ if LOGGING:
     print(
         'Logging sensor measurements taken every {2} seconds \
         to "{0}" every {1} seconds.'.format(
-            phant_obj.title, LOGGING_PERIOD_SECONDS, MEASUREMENT_INTERVAL
+            phant_obj.title, LOGGING_PERIOD_SECONDS, SENSOR_MEASUREMENT_INTERVAL
         )
     )
     # print(phant_obj)
 
+# Initialize 'NAPI' and 'nest_temperature'
+global NAPI
+NAPI = None
+if NEST_API:
+    nest_temperature = 35.0
+    NAPI = nest.Nest(
+        client_id=nest_client_id,
+        client_secret=nest_client_secret,
+        access_token_cache_file=nest_access_token_cache_file,
+    )
+    try:
+        if NAPI.authorization_required:
+            print('Authorization required.  Run "python3 ./nest_access.py"')
+            raise SystemExit
 
-# via https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
-class GracefulKiller:
-    kill_now = False
+        for structure in NAPI.structures:
+            print('Structure %s' % structure.name)
+            print('    Away: %s' % structure.away)
+            print('    Devices:')
 
-    def __init__(self):
-        signal.signal(signal.SIGINT, self.exit_gracefully)
-        signal.signal(signal.SIGTERM, self.exit_gracefully)
+            for device in structure.thermostats:
+                print('        Device: %s' % device.name)
+                print('            Temp: %0.1f' % device.temperature)
+                nest_temperature = device.temperature
+    except requests.exceptions.ConnectionError as errec:
+        print("Nest API: Error Connecting:", errec)
+        print('-W- Is network down?')
+        # log_error(error_type='OWM API: ConnectionError')
+    finally:
+        # disable API if a network error encountered
+        if nest_temperature == 35.0:
+            NEST_API = False
 
-    def exit_gracefully(self, signum, frame):
-        print(
-            "Received signal "
-            + str(signum)
-            + " on line "
-            + str(frame.f_lineno)
-            + " in "
-            + frame.f_code.co_filename
-        )
-        self.kill_now = True
+print ("Nest API enabled:", NEST_API)
 
+ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
+
+# via https://stackoverflow.com/a/46346184/47850
+exit_sentinel = Event()
+
+def exit_gracefully(signum, frame):
+    print("Received signal " + str(signum) + " on line " +
+          str(frame.f_lineno) + " in " + frame.f_code.co_filename)
+    exit_sentinel.set()
+
+def is_location_enabled(location):
+    location_index = ALTERNATE_TEMPERATURE_LOCATIONS.index(location)
+    return ALTERNATE_TEMPERATURE_LOCATION_ENABLES[location_index]
+
+def is_time_to_update(start_time, location='sensor'):
+    if not is_location_enabled(location):
+        return False
+
+    if RECENT_READINGS[location] == UNINITIALIZED_READING :
+        return True
+
+    location_index = ALTERNATE_TEMPERATURE_LOCATIONS.index(location)
+    update_interval = UPDATE_LOCATION_INTERVALS[location_index]
+    update_cycle_number = UPDATE_CYCLE_NUMBERS[location_index]
+    previous_update = UPDATE_PREVIOUS_TIMES[location_index]
+    current_time = time.time()
+    next_update_deadline = start_time + (update_cycle_number + 1) * update_interval
+    print(location, "time until deadline", next_update_deadline - current_time)
+    if current_time > next_update_deadline:
+        return True
+
+    return False
+
+def update_location(location='sensor'):
+    if location == 'sensor':
+        update_location_sensor()
+    elif location == 'nest':
+        update_location_nest()
+    elif location == 'outdoor':
+        update_location_owm()
+
+def location_updated(location):
+    location_index = ALTERNATE_TEMPERATURE_LOCATIONS.index(location)
+    UPDATE_PREVIOUS_TIMES[location_index] = time.time()
+    UPDATE_CYCLE_NUMBERS[location_index] = UPDATE_CYCLE_NUMBERS[location_index] + 1
+
+def update_location_nest():
+    try:
+        if NAPI.authorization_required:
+            print(
+                'Authorization required.  Run \
+                "python3 ./nest_access.py"'
+            )
+            raise SystemExit
+
+        for structure in NAPI.structures:
+            for device in structure.thermostats:
+                nest_temperature = device.temperature
+                print('Nest temperature: {0}'.format(nest_temperature))
+    except requests.exceptions.ConnectionError as errec:
+        print("NEST API: Error Connecting:", errec)
+        print('-W- Is network down?')
+        log_error(error_type='NEST API: ConnectionError')
+    except IndexError as e:
+        print("NEST API: IndexError:", e)
+        log_error(error_type='NEST API: IndexError')
+    except nest.nest.APIError as errnapi:
+        print("NEST API: APIError:", errnapi)
+        log_error(error_type='NEST API: APIError')
+
+    RECENT_READINGS['nest'] = nest_temperature
+    location_updated('nest')
+
+
+def update_location_owm():
+    print("TODO: update owm")
+
+def update_location_sensor():
+    try:
+        # Attempt to get sensor readings.
+        temp = bmp.read_temperature()
+        pressure = bmp.read_pressure()
+        altitude = bmp.read_altitude()
+
+    except IOError:
+        # XXX: Handle/report IOErrors?
+        pass
+
+    temp_in_F = (temp * 9.0 / 5.0) + 32.0
+    if VERBOSE_BMP_READINGS:
+        print("BMP Sensor", end=" ")
+        print("  Temp(°C): %.1f°C" % temp, end=" ")
+        print("  Temp(°F): %.1f°F" % temp_in_F, end=" ")
+        print("  Pressure: %.1f hPa" % (pressure / 100.0), end=" ")
+        print("  Altitude: %.1f m" % altitude)
+
+    # FIXME: save values for periodic logging
+
+    RECENT_READINGS['sensor'] = temp_in_F
+    location_updated('sensor')
+
+def display_location_temperature(location):
+
+    temperature_in_F = RECENT_READINGS[location]
+
+    temperature_digits = get_temperature_digits_in_fahrenheit(
+        temperature_in_F, location
+    )
+
+    print(temperature_digits)
+    try:
+        display_temperature_digits(
+            temperature_digits, display_handle=segment)
+    except IOError:
+        pass
 
 def main():
     def graceful_exit():
         # Turn off LED
         segment.clear()
         segment.write_display()
-        exit(0)
+        sys.exit(0)
+
+    # Register signal handler
+    for sig in ('TERM', 'HUP', 'INT'):
+        signal.signal(getattr(signal, 'SIG'+sig), exit_gracefully)
 
     # output current process id
-    print("My PID is:", os.getpid())
-    killer = GracefulKiller()
+    print("Weather logger PID is:", os.getpid())
+    print("Starting main loop... Press CTRL+C to exit")
+    number_of_locations = len(ALTERNATE_TEMPERATURE_LOCATIONS)
+    start_time = time.time()
+    display_cycle_number = -1
 
-    print("Starting main loop")
-    print("Press CTRL+C to exit")
-    while not killer.kill_now:
-        try:
-            # Attempt to get sensor readings.
-            temp = bmp.read_temperature()
-            pressure = bmp.read_pressure()
-            altitude = bmp.read_altitude()
+    while not exit_sentinel.is_set():
+        display_cycle_number += 1
+        current_location_index = display_cycle_number % number_of_locations
+        current_location = ALTERNATE_TEMPERATURE_LOCATIONS[current_location_index]
 
-            temp_in_F = (temp * 9.0 / 5.0) + 32.0
-            print("BMP Sensor", end=" ")
-            print("  Temp(°C): %.1f°C" % temp, end=" ")
-            print("  Temp(°F): %.1f°F" % temp_in_F, end=" ")
-            print("  Pressure: %.1f hPa" % (pressure / 100.0), end=" ")
-            print("  Altitude: %.1f m" % altitude)
+        if is_time_to_update(start_time, current_location):
+            print("Updating", current_location)
+            update_location(current_location)
 
-            # test1 = get_temperature_digits_in_fahrenheit(105, "nest")
-            # print(test1)
-            # display_temperature_digits(test1, display_handle = segment)
-            # time.sleep(5)
+        display_location_temperature(current_location)
 
-            # test2 = get_temperature_digits_in_fahrenheit(-20, "nest")
-            # print(test2)
-            # display_temperature_digits(test2, display_handle = segment)
-            # time.sleep(5)
-
-            temperature_digits = get_temperature_digits_in_fahrenheit(
-                temp_in_F, "sensor"
-            )
-            # print(temperature_digits)
-            display_temperature_digits(temperature_digits, display_handle=segment)
-
-            time.sleep(15)
-
-        except KeyboardInterrupt:
-            graceful_exit()
+        # Calculate the event net wait interval (pauses here)
+        exit_sentinel.wait(max(0, start_time + ALTERNATE_TEMPERATURE_DISPLAY_SECONDS*display_cycle_number
+                               - time.time()))
 
     graceful_exit()

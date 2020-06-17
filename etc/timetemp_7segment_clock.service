@@ -1,6 +1,6 @@
 
 [Unit]
-Description=TimeTemp clock display
+Description=TimeTemp Clock Display
 After=network.target time-sync.target
 ConditionPathExists=/home/pi/projects/timetemp3
 
