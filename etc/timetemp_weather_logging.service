@@ -6,7 +6,7 @@ ConditionPathExists=/home/pi/projects/timetemp3
 
 [Service]
 WorkingDirectory=/home/pi/projects/timetemp3/
-ExecStart=/usr/bin/python3 /home/pi/.local/bin/timetemp_weather_logging
+ExecStart=/usr/bin/python3 /home/pi/.local/bin/timetemp_weather_logging conf/weather_logging_config.json conf/phant-config.json
 # actual location: /home/pi/projects/timetemp3/timetemp3/my_weather_logging.py
 # do not buffer output (useful for debugging)
 Environment=PYTHONUNBUFFERED=1

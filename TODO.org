@@ -18,7 +18,7 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 - [X] map values to variables
 - [X] initialize Hardware wrappers
 - [X] initialize API wrappers (phant, dark sky, OWM, Nest)
-- [-] Loop
+- [X] Loop
   - [X] read sensors
   - [X] Read APIs, in turn, if enabled
     - [X] +Dark Sky+
@@ -26,9 +26,9 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
     - [X] Nest
   - [X] Alternate display the enabled temperatures
   - [X] Delay loop
-  - [ ] Log information
-    - [ ] Do at explicit intervals
-    - [ ] ... only if information source is enabled
+  - [X] Log information
+    - [X] Do at explicit intervals
+    - [X] +... only if information source is enabled+
   - [X] finally: clause in loop (for exit)
 
 ** system-related
@@ -37,13 +37,19 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [X] instructions
   - [X] service unit files
   - [ ] installer script
+    - [ ] incorporate into setup?
+    - [ ] add to MANIFEST?
 - [X] requirements / dependency management installer
 
 ** functions
 
 - [X] display_temperature_in_fahrenheit()
-- [ ] log_error()
+- [X] log_error()
 - [X] Signal, Keyboardinterrupt handler
 
 
 * TODOs
+
+- [ ] add logging facilities
+  - [ ] use for debug/info output instead of print
+  - [ ] add systemd / journal logging
