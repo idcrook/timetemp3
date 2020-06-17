@@ -29,7 +29,8 @@ from phant3.Phant import Phant
 
 # FIXME: Refactor into timetemp3/__init__.py
 import nest  # https://github.com/jkoelker/python-nest/
-
+from pyowm.owm import OWM  # https://github.com/csparpa/pyowm
+from pyowm.commons import exceptions as OwmExceptions
 
 usage = """
     script app_config_json phant_config_json
@@ -176,6 +177,30 @@ if NEST_API:
 
 print ("Nest API enabled:", NEST_API)
 
+if OWM_API:
+    outside_temperature = 42
+    owm = OWM(owm_secret_key)
+    mgr = owm.weather_manager()
+    try:
+        one_call = mgr.one_call(owm_lat, owm_lon)
+        currently = one_call.current
+        print(currently.status)
+        print(currently.detailed_status)
+        print(currently.reference_time())
+        print(currently.temperature(unit='fahrenheit'))
+    except requests.exceptions.ConnectionError as errec:
+        print("OWM API: Error Connecting:", errec)
+        print('-W- Is network down?')
+    except OwmExceptions.APIRequestError as errapi:
+        print("OWM API Error:", errapi)
+    finally:
+        # disable API if a network error encountered
+        if not currently:
+            OWM_API = False
+
+print ("OWM API enabled:", OWM_API)
+
+
 ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
 
 # via https://stackoverflow.com/a/46346184/47850
@@ -219,7 +244,10 @@ def update_location(location='sensor'):
 
 def location_updated(location):
     location_index = ALTERNATE_TEMPERATURE_LOCATIONS.index(location)
-    UPDATE_PREVIOUS_TIMES[location_index] = time.time()
+    current_time = time.time()
+    if UPDATE_PREVIOUS_TIMES[location_index]:
+        print(location, "last updated", current_time - UPDATE_PREVIOUS_TIMES[location_index], "seconds ago")
+    UPDATE_PREVIOUS_TIMES[location_index] = current_time
     UPDATE_CYCLE_NUMBERS[location_index] = UPDATE_CYCLE_NUMBERS[location_index] + 1
 
 def update_location_nest():
@@ -251,7 +279,17 @@ def update_location_nest():
 
 
 def update_location_owm():
-    print("TODO: update owm")
+    outside_temperature = 42
+    try:
+        outside_temperature = currently.temperature(unit='fahrenheit')[
+            'temp'
+        ]
+    except:
+        print("OWM: Unexpected error:", sys.exc_info()[0])
+        raise
+    
+    RECENT_READINGS['outdoor'] = outside_temperature
+    location_updated('outdoor')
 
 def update_location_sensor():
     try:

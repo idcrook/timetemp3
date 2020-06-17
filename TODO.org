@@ -7,37 +7,43 @@
 ** TODO Add author, copyright, etc. tags
 ** TODO Add example .json (and include in MANIFEST.in)
 https://python-packaging.readthedocs.io/en/latest/non-code-files.html
-** TODO  systemd installer method
+** DONE systemd installer method
 
 
 * Outline of program
 
-- [ ] control variables and constants
-- [ ] read in config files
-  - [ ] API (Nest, OWM and Dark Sky) and I2C config
-- [ ] map values to variables
-- [ ] initialize Hardware wrappers
-- [ ] initialize API wrappers (phant, dark sky, OWM, Nest)
-- [ ] Loop
-  - [ ] read sensors
-  - [ ] Read APIs, in turn, if enabled
-    - [ ] Dark Sky
-    - [ ] Open Weather Map
-    - [ ] Nest
-  - [ ] Alternate display the enabled temperatures
-  - [ ] Delay loop
+- [X] control variables and constants
+- [X] read in config files
+  - [X] API (Nest, OWM and Dark Sky) and I2C config
+- [X] map values to variables
+- [X] initialize Hardware wrappers
+- [X] initialize API wrappers (phant, dark sky, OWM, Nest)
+- [-] Loop
+  - [X] read sensors
+  - [X] Read APIs, in turn, if enabled
+    - [X] +Dark Sky+
+    - [X] Open Weather Map
+    - [X] Nest
+  - [X] Alternate display the enabled temperatures
+  - [X] Delay loop
   - [ ] Log information
     - [ ] Do at explicit intervals
     - [ ] ... only if information source is enabled
-  - [ ] finally: clause in loop (for exit)
+  - [X] finally: clause in loop (for exit)
 
 ** system-related
 
-- [ ] systemd installer
+- [-] systemd installer
+  - [X] instructions
+  - [X] service unit files
+  - [ ] installer script
 - [X] requirements / dependency management installer
 
 ** functions
 
-- [ ] display_temperature_in_fahrenheit()
+- [X] display_temperature_in_fahrenheit()
 - [ ] log_error()
-- [ ] Signal, Keyboardinterrupt handler
+- [X] Signal, Keyboardinterrupt handler
+
+
+* TODOs
