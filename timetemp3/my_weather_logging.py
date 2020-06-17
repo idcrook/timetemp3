@@ -86,8 +86,9 @@ NEST_API = True
 # NEST_API = False
 NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
-# How long to wait (in seconds) between temperature locations
-ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 5
+# How long to wait (in seconds) between temperature locations, the key wait
+# value for display loop
+ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 3.3
 ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
 UPDATE_LOCATION_INTERVALS = (
     SENSOR_MEASUREMENT_INTERVAL,
