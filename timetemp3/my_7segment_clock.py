@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
+# This file is covered by the LICENSING file in the root of this project.
+
 import time
 import datetime
 import os
 import signal
 from sys import exit
 
-from timetemp3 import initialize_and_get_time_display_handle, get_time_digits, display_time_digits
+from timetemp3 import (
+    initialize_and_get_time_display_handle,
+    get_time_digits,
+    display_time_digits,
+)
 
 # To run: python3 ./my_7segment_clock.py
 
@@ -18,12 +24,13 @@ LED_SEGMENT_I2C_ADDRESS = 0x70
 # LED_SEGMENT_I2C_ADDRESS = 0x71
 
 # Number of seconds to wait after display is written
-DISPLAY_SLEEP_DURATION = 1/4
+DISPLAY_SLEEP_DURATION = 1 / 4
 
 # Initialize LED display
-segment = initialize_and_get_time_display_handle(i2c_address = LED_SEGMENT_I2C_ADDRESS)
+segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
 
 io_error_count = 0
+
 
 # via https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
 class GracefulKiller:
@@ -44,10 +51,10 @@ class GracefulKiller:
         )
         self.kill_now = True
 
-def main():
 
+def main():
     def graceful_exit():
-        # Turn off LED 
+        # Turn off LED
         segment.clear()
         segment.write_display()
         exit(0)
@@ -62,9 +69,13 @@ def main():
         # Periodically update the time on a 4 char, 7-segment display
         try:
             now = datetime.datetime.now()
-            clock_digits = get_time_digits(now = now)
-            #print(clock_digits)
-            display_time_digits(clock_digits, sleep_duration = DISPLAY_SLEEP_DURATION, display_handle = segment)
+            clock_digits = get_time_digits(now=now)
+            # print(clock_digits)
+            display_time_digits(
+                clock_digits,
+                sleep_duration=DISPLAY_SLEEP_DURATION,
+                display_handle=segment,
+            )
 
         except KeyboardInterrupt:
             graceful_exit()
@@ -76,6 +87,7 @@ def main():
             time.sleep(2)
 
     graceful_exit()
+
 
 # added in case script is run directly
 if __name__ == '__main__':

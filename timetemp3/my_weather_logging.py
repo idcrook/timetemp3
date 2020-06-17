@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# This file is covered by the LICENSING file in the root of this project.
+
 #  - read indoor-located pressure/temperature sensor
 #    - log sensor data to a phant server
 #    - log external weather data (read from Web API)
@@ -9,12 +11,10 @@ import os
 import sys
 import time
 
-# import datetime
 import json
 import pathlib
 from pprint import pprint
 import signal
-import ssl
 from threading import Event
 import requests  # so can handle exceptions
 
@@ -42,24 +42,26 @@ LOGGING = True
 LOGGING_COUNT = 0
 # borrowed field names from previous project
 LOGGING_DATA = {}
-LOGGING_FIELDS = ("cloudiness",
-                  "cond",
-                  "cond_desc",
-                  "dew_point",
-                  "dt",
-                  "in_humid",
-                  "in_pres",
-                  "in_tc",
-                  "in_tf",
-                  "out_feels_like",
-                  "out_humid",
-                  "out_pres",
-                  "out_temp",
-                  "uvi",
-                  "weather_code",
-                  "weather_icon_name",
-                  "wind_deg",
-                  "wind_speed",)
+LOGGING_FIELDS = (
+    "cloudiness",
+    "cond",
+    "cond_desc",
+    "dew_point",
+    "dt",
+    "in_humid",
+    "in_pres",
+    "in_tc",
+    "in_tf",
+    "out_feels_like",
+    "out_humid",
+    "out_pres",
+    "out_temp",
+    "uvi",
+    "weather_code",
+    "weather_icon_name",
+    "wind_deg",
+    "wind_speed",
+)
 
 # How long to wait (in seconds) between uploading measurements.
 LOGGING_PERIOD_SECONDS = 5 * 60
@@ -69,11 +71,12 @@ PREVIOUS_UPLOAD_TIME = None
 # Approximately how often sensor measurements are made (in seconds)
 SENSOR_MEASUREMENT_INTERVAL = 15
 
-
 # Default time to wait before hitting API again.
 WEBAPI_PERIOD_SECONDS = 5 * 60
 
-# Use Open Weather Map API for local weather - https://openweathermap.org/api https://openweathermap.org/api/one-call-api
+# Use Open Weather Map API for local weather
+# - https://openweathermap.org/api
+# - https://openweathermap.org/api/one-call-api
 OWM_API = True
 # OWM_API = False
 OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
@@ -87,12 +90,14 @@ NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 5
 ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
 UPDATE_LOCATION_INTERVALS = (
-    SENSOR_MEASUREMENT_INTERVAL, OWM_REFRESH_INTERVAL, NEST_REFRESH_INTERVAL, )
+    SENSOR_MEASUREMENT_INTERVAL,
+    OWM_REFRESH_INTERVAL,
+    NEST_REFRESH_INTERVAL,
+)
 UPDATE_PREVIOUS_TIMES = [None] * len(ALTERNATE_TEMPERATURE_LOCATIONS)
 
 # Initalize recordkeeping for updates
-UPDATE_CYCLE_NUMBERS = [-1 for i in range(
-    len(ALTERNATE_TEMPERATURE_LOCATIONS))]
+UPDATE_CYCLE_NUMBERS = [-1 for i in range(len(ALTERNATE_TEMPERATURE_LOCATIONS))]
 # Use -1 to represent that update is always requests if not yet initialized
 
 BMP_ADDRESS = 0x77
@@ -102,10 +107,11 @@ DISPLAY_SLEEP_DURATION = 1 / 100
 VERBOSE_BMP_READINGS = False
 
 UNINITIALIZED_READING = -100.0
-RECENT_READINGS = {ALTERNATE_TEMPERATURE_LOCATIONS[0]: UNINITIALIZED_READING,
-                   ALTERNATE_TEMPERATURE_LOCATIONS[1]: UNINITIALIZED_READING,
-                   ALTERNATE_TEMPERATURE_LOCATIONS[2]: UNINITIALIZED_READING,
-                   }
+RECENT_READINGS = {
+    ALTERNATE_TEMPERATURE_LOCATIONS[0]: UNINITIALIZED_READING,
+    ALTERNATE_TEMPERATURE_LOCATIONS[1]: UNINITIALIZED_READING,
+    ALTERNATE_TEMPERATURE_LOCATIONS[2]: UNINITIALIZED_READING,
+}
 
 try:
     app_config_json = sys.argv[1]
@@ -130,15 +136,18 @@ def convert_json_string_to_hexadecimal_value(s):
 # Read in config file
 with open(app_config_json) as config_file:
     config = json.loads(config_file.read())
+
 # pprint(config)
 pprint(config["i2c_addresses"])
 
-bmp_address = convert_json_string_to_hexadecimal_value(
-    config["i2c_addresses"]["bmp085"]
-) or BMP_ADDRESS
-led_display_address = convert_json_string_to_hexadecimal_value(
-    config["i2c_addresses"]["i2c_led"]
-) or LED_DISPLAY_ADDRESS
+bmp_address = (
+    convert_json_string_to_hexadecimal_value(config["i2c_addresses"]["bmp085"])
+    or BMP_ADDRESS
+)
+led_display_address = (
+    convert_json_string_to_hexadecimal_value(config["i2c_addresses"]["i2c_led"])
+    or LED_DISPLAY_ADDRESS
+)
 
 owm_secret_key = config["owm"]["secret-key"]
 owm_lat = config["owm"]["lat"]
@@ -150,8 +159,7 @@ nest_client_secret = config['timetemp_nest']['client_secret']
 nest_access_token_cache_file = 'nest.json'
 
 # Create display instance
-segment = initialize_and_get_temperature_display_handle(
-    i2c_address=led_display_address)
+segment = initialize_and_get_temperature_display_handle(i2c_address=led_display_address)
 
 # Create sensor instance
 bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
@@ -227,7 +235,6 @@ if OWM_API:
 
 print("OWM API enabled:", OWM_API)
 
-
 ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
 
 # via https://stackoverflow.com/a/46346184/47850
@@ -235,8 +242,14 @@ exit_sentinel = Event()
 
 
 def exit_gracefully(signum, frame):
-    print("Received signal " + str(signum) + " on line " +
-          str(frame.f_lineno) + " in " + frame.f_code.co_filename)
+    print(
+        "Received signal "
+        + str(signum)
+        + " on line "
+        + str(frame.f_lineno)
+        + " in "
+        + frame.f_code.co_filename
+    )
     exit_sentinel.set()
 
 
@@ -257,9 +270,8 @@ def is_time_to_update(start_time, location='sensor'):
     update_cycle_number = UPDATE_CYCLE_NUMBERS[location_index]
     # previous_update = UPDATE_PREVIOUS_TIMES[location_index]
     current_time = time.time()
-    next_update_deadline = start_time + \
-        (update_cycle_number + 1) * update_interval
-    #print(location, "time until deadline", next_update_deadline - current_time)
+    next_update_deadline = start_time + (update_cycle_number + 1) * update_interval
+    # print(location, "time until deadline", next_update_deadline - current_time)
     if current_time > next_update_deadline:
         return True
 
@@ -274,8 +286,8 @@ def is_time_to_upload(start_time):
     # Check that required data is available
     location_index_sensor = ALTERNATE_TEMPERATURE_LOCATIONS.index('sensor')
     location_index_outdoor = ALTERNATE_TEMPERATURE_LOCATIONS.index('outdoor')
-    sensor_not_updated = UPDATE_PREVIOUS_TIMES[location_index_sensor] is  None
-    outdoor_not_updated = UPDATE_PREVIOUS_TIMES[location_index_outdoor] is  None
+    sensor_not_updated = UPDATE_PREVIOUS_TIMES[location_index_sensor] is None
+    outdoor_not_updated = UPDATE_PREVIOUS_TIMES[location_index_outdoor] is None
     if sensor_not_updated or outdoor_not_updated:
         return False
 
@@ -284,7 +296,7 @@ def is_time_to_upload(start_time):
     # previous_upload = PREVIOUS_UPLOAD_TIME
     current_time = time.time()
     next_update_deadline = start_time + (update_cycle_number) * update_interval
-    #print("time until next logging", next_update_deadline - current_time)
+    # print("time until next logging", next_update_deadline - current_time)
     if current_time > next_update_deadline:
         return True
     else:
@@ -358,9 +370,7 @@ def update_location_owm():
 
     outside_temperature = 42
     try:
-        outside_temperature = currently.temperature(unit='fahrenheit')[
-            'temp'
-        ]
+        outside_temperature = currently.temperature(unit='fahrenheit')['temp']
     except:
         print("OWM: Unexpected error:", sys.exc_info()[0])
         raise
@@ -372,7 +382,8 @@ def update_location_owm():
     LOGGING_DATA['dew_point'] = currently.dewpoint
     LOGGING_DATA['dt'] = currently.ref_time
     LOGGING_DATA['out_feels_like'] = currently.temperature(unit='fahrenheit')[
-        'feels_like']
+        'feels_like'
+    ]
     LOGGING_DATA['out_humid'] = currently.humidity
     LOGGING_DATA['out_pres'] = currently.pressure['press']
     LOGGING_DATA['out_temp'] = outside_temperature
@@ -500,12 +511,13 @@ def display_location_temperature(location):
     )
     # print(temperature_digits)
     try:
-        display_temperature_digits(
-            temperature_digits, display_handle=segment)
+        display_temperature_digits(temperature_digits, display_handle=segment)
     except IOError:
         pass
 
+
 ERROR_TABLES = {}
+
 
 def log_error(error_type='UnknownError'):
     global ERROR_TABLES
@@ -514,6 +526,7 @@ def log_error(error_type='UnknownError'):
         ERROR_TABLES[error_type] = 1
     else:
         ERROR_TABLES[error_type] = ERROR_TABLES[error_type] + 1
+
 
 def main():
     def graceful_exit():
@@ -524,7 +537,7 @@ def main():
 
     # Register signal handler
     for sig in ('TERM', 'HUP', 'INT'):
-        signal.signal(getattr(signal, 'SIG'+sig), exit_gracefully)
+        signal.signal(getattr(signal, 'SIG' + sig), exit_gracefully)
 
     # output current process id
     print("Weather logger PID is:", os.getpid())
@@ -548,7 +561,13 @@ def main():
             log_data()
 
         # Calculate the event net wait interval (pauses here)
-        exit_sentinel.wait(max(0, start_time + ALTERNATE_TEMPERATURE_DISPLAY_SECONDS*display_cycle_number
-                               - time.time()))
+        exit_sentinel.wait(
+            max(
+                0,
+                start_time
+                + ALTERNATE_TEMPERATURE_DISPLAY_SECONDS * display_cycle_number
+                - time.time(),
+            )
+        )
 
     graceful_exit()

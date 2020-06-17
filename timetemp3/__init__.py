@@ -1,16 +1,26 @@
 # -*- coding: utf-8 -*-
 
+# This file is covered by the LICENSING file in the root of this project.
+
+__author__ = "David Crook"
+__copyright__ = "Copyright 2020"
+__credits__ = []
+__license__ = "MIT"
+__version__ = "0.1.0"
+__maintainer__ = "David Crook"
+__email__ = "idcrook@users.noreply.github.com"
+# __status__ = "Prototype", "Development", or "Production"
+
 import time
 
 import Adafruit_BMP.BMP085 as BMP085
 from Adafruit_LED_Backpack import SevenSegment
 
-from phant3.Phant import Phant
+# from phant3.Phant import Phant
 
-import nest  # https://github.com/jkoelker/python-nest/
-from pyowm.owm import OWM  # https://github.com/csparpa/pyowm
-from pyowm.commons import exceptions as OwmExceptions
-
+# import nest  # https://github.com/jkoelker/python-nest/
+# from pyowm.owm import OWM  # https://github.com/csparpa/pyowm branch: develop/v3
+# from pyowm.commons import exceptions as OwmExceptions
 
 # magic numbers for storing / passing time digits
 DIGIT_1 = 0
@@ -32,8 +42,8 @@ TEMPERATURE_BMP_SENSOR_I2C_ADDRESS = 0x77
 CLOCK_HOUR_MODE_12_OR_24 = 12
 
 # Default number of seconds to wait after display is written
-CLOCK_DISPLAY_SLEEP_DURATION = 1/4
-TEMPERATURE_DISPLAY_SLEEP_DURATION = 1/1000
+CLOCK_DISPLAY_SLEEP_DURATION = 1 / 4
+TEMPERATURE_DISPLAY_SLEEP_DURATION = 1 / 1000
 
 # Additional characters for 7 segment display
 TEMPERATURE_RAW_DIGIT_VALUES = {
@@ -86,7 +96,9 @@ def get_time_digits(now, hour_mode=CLOCK_HOUR_MODE_12_OR_24, toggle_colon=True):
     return digits
 
 
-def display_time_digits(time_digits, sleep_duration=CLOCK_DISPLAY_SLEEP_DURATION, display_handle=None):
+def display_time_digits(
+    time_digits, sleep_duration=CLOCK_DISPLAY_SLEEP_DURATION, display_handle=None
+):
     segment = display_handle
 
     if segment:
@@ -105,26 +117,32 @@ def display_time_digits(time_digits, sleep_duration=CLOCK_DISPLAY_SLEEP_DURATION
         # sleep_duration should be less than 1 second to prevent colon jittering
         time.sleep(sleep_duration)
 
+
 def get_temperature_sensor_handle(i2c_address=TEMPERATURE_BMP_SENSOR_I2C_ADDRESS):
     bmp = BMP085.BMP085(mode=BMP085.BMP085_HIGHRES, address=i2c_address)
     return bmp
 
-def initialize_and_get_temperature_display_handle(i2c_address=TEMPERATURE_LED_SEGMENT_I2C_ADDRESS):
+
+def initialize_and_get_temperature_display_handle(
+    i2c_address=TEMPERATURE_LED_SEGMENT_I2C_ADDRESS,
+):
     segment = SevenSegment.SevenSegment(address=i2c_address)
     # Initialize display. Must be called once before using the display.
     segment.begin()
     print("Using temperature display I2C address: 0x%02x" % (i2c_address,))
     return segment
 
+
 def _lookup_where_temperature_digit(where):
     raw_value = 0x0
     if where == 'outdoor':
         raw_value = TEMPERATURE_RAW_DIGIT_VALUES['outdoor_degrees']
     elif where == 'nest':
-        raw_value =  TEMPERATURE_RAW_DIGIT_VALUES['°']
+        raw_value = TEMPERATURE_RAW_DIGIT_VALUES['°']
     else:
-        raw_value =  TEMPERATURE_RAW_DIGIT_VALUES['tickmark']
+        raw_value = TEMPERATURE_RAW_DIGIT_VALUES['tickmark']
     return raw_value
+
 
 def get_temperature_digits_in_fahrenheit(temperature, where):
     digits = [None] * 5
@@ -147,6 +165,7 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
             digits[DIGIT_1] = 1
         else:
             digits[DIGIT_1] = ' '  # Tens
+
         digits[DIGIT_2] = int(round(temperature) % 10)  # Ones
         digits[DIGIT_3] = _lookup_where_temperature_digit(where)
     elif round(temperature * 10.0) > -94.9:  # -9 to 0 degrees : "-#°F"
@@ -155,8 +174,8 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
         digits[DIGIT_3] = _lookup_where_temperature_digit(where)
     elif round(temperature * 10.0) >= -995.0:  # -99 to -10 degrees : "-##F"
         digits[DIGIT_1] = '-'  # Tens
-        digits[DIGIT_2] =  int(round(abs(temperature)) / 10)  # Tens
-        digits[DIGIT_3] =  "%01d" % (int(round(abs(temperature)) % 10))  # Ones
+        digits[DIGIT_2] = int(round(abs(temperature)) / 10)  # Tens
+        digits[DIGIT_3] = "%01d" % (int(round(abs(temperature)) % 10))  # Ones
     else:  # error (do not expect to reach here)
         digits[DIGIT_1] = 'E'
         digits[DIGIT_2] = 'E'
@@ -167,7 +186,11 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
     return digits
 
 
-def display_temperature_digits(temperature_digits, sleep_duration=TEMPERATURE_DISPLAY_SLEEP_DURATION, display_handle=None):
+def display_temperature_digits(
+    temperature_digits,
+    sleep_duration=TEMPERATURE_DISPLAY_SLEEP_DURATION,
+    display_handle=None,
+):
     segment = display_handle
 
     if segment:
@@ -179,6 +202,7 @@ def display_temperature_digits(temperature_digits, sleep_duration=TEMPERATURE_DI
             segment.set_digit_raw(DIGIT_3, temperature_digits[DIGIT_3])
         else:
             segment.set_digit(DIGIT_3, temperature_digits[DIGIT_3])
+
         segment.set_digit(DIGIT_4, temperature_digits[DIGIT_4])
         segment.set_colon(temperature_digits[DIGIT_COLON])
 

@@ -1,8 +1,10 @@
-# timetemp3
+timetemp3
+=========
 
 Monitor and display time/temp with RasPi and log to cloud
 
-## Install
+Install
+-------
 
 Install pre-reqs and dependencies
 
@@ -34,9 +36,10 @@ pip3 install .
 # for development, use instead # pip3 install -e .
 ```
 
-## Run
+Run
+---
 
-The i2c addresses in the scripts and config  files may need to be updated for your hardware.
+The i2c addresses in the scripts and config files may need to be updated for your hardware.
 
 ```shell
 cd ~/projects/timetemp3
@@ -58,11 +61,12 @@ timetemp_weather_logging conf/weather_logging_config.json conf/phant-config.json
 # <Ctrl-C> to exit
 ```
 
-## Run as systemd service
+Run as systemd service
+----------------------
 
 On my Raspberry Pi OS system, `groups` includes "`gpio i2c`" so these services do not need to run as root user.
 
-Install user unit file.  Assumes git clone at `/home/pi/projects/timetemp3/` and has been installed
+Install user unit file. Assumes git clone at `/home/pi/projects/timetemp3/` and has been installed
 
 ```shell
 # refer to https://www.freedesktop.org/software/systemd/man/systemd.unit.html#User%20Unit%20Search%20Path
@@ -94,6 +98,7 @@ sudo loginctl enable-linger pi
 sudo loginctl user-status pi
 ```
 
-# TODO
+TODO
+====
 
 See [TODO.org](TODO.org)

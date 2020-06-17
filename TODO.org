@@ -5,7 +5,7 @@
 
 * Package todos
 ** TODO Add author, copyright, etc. tags
-** TODO Add example .json (and include in MANIFEST.in)
+** DONE Add example .json
 https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 ** DONE systemd installer method
 
