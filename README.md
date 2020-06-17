@@ -85,10 +85,13 @@ systemctl --user start timetemp_weather_logging
 systemctl --user status timetemp_weather_logging
 journalctl --user-unit timetemp_weather_logging.service
 
-
-# Run on system startup
+# Automatically start
 systemctl --user enable timetemp_7segment_clock
 systemctl --user enable timetemp_weather_logging
+
+# Run on system startup
+sudo loginctl enable-linger pi
+sudo loginctl user-status pi
 ```
 
 # TODO
