@@ -33,12 +33,10 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 
 ** system-related
 
-- [-] systemd installer
+- [X] systemd installer
   - [X] instructions
   - [X] service unit files
-  - [ ] installer script
-    - [ ] incorporate into setup?
-    - [ ] add to MANIFEST?
+  - [X] installer script
 - [X] requirements / dependency management installer
 
 ** functions
@@ -47,9 +45,12 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 - [X] log_error()
 - [X] Signal, Keyboardinterrupt handler
 
-
 * TODOs
 
 - [ ] add logging facilities
   - [ ] use for debug/info output instead of print
   - [ ] add systemd / journal logging
+
+- [ ] .service systemd unit automation
+  - [ ] add .service systemd unit
+  - [ ] incorporate into setup?
