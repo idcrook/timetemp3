@@ -1,9 +1,11 @@
 #!/bin/bash
 #!/bin/bash -x
 
-# wrapper script to install systemd user unit
+# wrapper script to install systemd user unit(s)
 
-clone_dir=/home/pi/projects/timetemp3
+SCRIPT_DIR=$( cd  $(dirname "${BASH_SOURCE:=$0}") && pwd)
+
+clone_dir=$(dirname $SCRIPT_DIR)
 
 if [[ -d "${clone_dir}" ]] ; then
     echo Using clone "${clone_dir}"
@@ -17,8 +19,8 @@ cd "${clone_dir}"/
 # refer to https://www.freedesktop.org/software/systemd/man/systemd.unit.html#User%20Unit%20Search%20Path
 MY_SYSTEMD_USER_UNIT_DIR=/home/pi/.config/systemd/user/
 mkdir -p "${MY_SYSTEMD_USER_UNIT_DIR}"
-cp -av etc/timetemp_7segment_clock.service  "${MY_SYSTEMD_USER_UNIT_DIR}"
-cp -av etc/timetemp_weather_logging.service "${MY_SYSTEMD_USER_UNIT_DIR}"
+cp -av "${clone_dir}"/etc/timetemp_7segment_clock.service  "${MY_SYSTEMD_USER_UNIT_DIR}"
+cp -av "${clone_dir}"/etc/timetemp_weather_logging.service "${MY_SYSTEMD_USER_UNIT_DIR}"
 
 systemctl  --user list-unit-files | grep timetemp
 # next command needed even though listed in previous output
