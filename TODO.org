@@ -51,6 +51,6 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [X] use for debug/info output instead of print
   - [X] add systemd / journal logging
 
-- [ ] ~.service systemd unit automation~
-  - [ ] ~add python3 systemd hooks~
-  - [ ] ~incorporate into setup?~
+- [ ] +.service systemd unit automation+
+  - [ ] +add python3 systemd hooks+
+  - [ ] +incorporate into setup?+
