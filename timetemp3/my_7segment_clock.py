@@ -53,10 +53,9 @@ def main():
     global io_error_count
 
     import logging
-    VERBOSITY = logging.INFO # set to DEBUG for more verbose
-
     logger = logging.getLogger('7_segment_clock')
-    logger.setLevel(VERBOSITY) # set to DEBUG for more verbose
+    VERBOSITY = logging.INFO # set to DEBUG for more verbose
+    logger.setLevel(VERBOSITY) 
 
     # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
     INVOCATION_ID = os.getenv('INVOCATION_ID')

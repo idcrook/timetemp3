@@ -129,7 +129,7 @@ def initialize_and_get_temperature_display_handle(
     segment = SevenSegment.SevenSegment(address=i2c_address)
     # Initialize display. Must be called once before using the display.
     segment.begin()
-    print("Using temperature display I2C address: 0x%02x" % (i2c_address,))
+    # print("Using temperature display I2C address: 0x%02x" % (i2c_address,))
     return segment
 
 

@@ -7,13 +7,14 @@
 #    - log sensor data to a phant server
 #    - log external weather data (read from Web API)
 
+import logging
 import os
 import sys
 import time
 
 import json
 import pathlib
-from pprint import pprint
+from pprint import pformat
 import signal
 from threading import Event
 import requests  # so can handle exceptions
@@ -35,6 +36,30 @@ from pyowm.commons import exceptions as OwmExceptions
 usage = """
     script app_config_json phant_config_json
 """
+
+# these are for debug output, not data logging
+logger = logging.getLogger('weather_logger')
+VERBOSITY = logging.INFO  # set to logging.DEBUG for more verbose
+logger.setLevel(VERBOSITY) 
+
+# systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
+INVOCATION_ID = os.getenv('INVOCATION_ID')
+if INVOCATION_ID is not None:
+    from systemd import journal # sudo apt install python3-systemd
+    jH = journal.JournalHandler()
+    jH.setLevel(VERBOSITY)
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
+    jH.setFormatter(formatter)
+    logger.addHandler(jH)
+    logger.debug('INVOCATION_ID=%s' % INVOCATION_ID)
+else:
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    consoleHandler.setFormatter(formatter)
+    logger.addHandler(consoleHandler)
+    logger.info('Not running from systemd')
+
 
 # Logging sensor readings to Phant
 LOGGING = True
@@ -121,9 +146,8 @@ except:
     print(usage)
     sys.exit(1)
 
-print(app_config_json)
-print(phant_config_json)
-
+logger.debug(app_config_json)
+logger.debug(phant_config_json)
 
 def convert_json_string_to_hexadecimal_value(s):
     value = 0
@@ -138,8 +162,8 @@ def convert_json_string_to_hexadecimal_value(s):
 with open(app_config_json) as config_file:
     config = json.loads(config_file.read())
 
-# pprint(config)
-pprint(config["i2c_addresses"])
+# logger.debug(pformat(config))
+logger.debug(pformat(config["i2c_addresses"]))
 
 bmp_address = (
     convert_json_string_to_hexadecimal_value(config["i2c_addresses"]["bmp085"])
@@ -165,18 +189,14 @@ segment = initialize_and_get_temperature_display_handle(i2c_address=led_display_
 # Create sensor instance
 bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
 
-print(pathlib.Path().absolute())
+# logger.debug(pathlib.Path().absolute())
 
 if LOGGING:
     # Read in Phant config file
     phant_obj = Phant(jsonPath=phant_config_json)
-    print(
-        'Logging sensor measurements taken every {2} seconds \
-        to "{0}" every {1} seconds.'.format(
-            phant_obj.title, LOGGING_PERIOD_SECONDS, SENSOR_MEASUREMENT_INTERVAL
-        )
-    )
-    # print(phant_obj)
+    logger.info('Sensor measurements taken every {0} seconds'.format(SENSOR_MEASUREMENT_INTERVAL))
+    logger.info('Logging to "{0}" every {1} seconds.'.format(phant_obj.title, LOGGING_PERIOD_SECONDS))
+    logger.info(pformat(phant_obj.stats))
 
 # Initialize 'NAPI' and 'nest_temperature'
 global NAPI
@@ -190,28 +210,27 @@ if NEST_API:
     )
     try:
         if NAPI.authorization_required:
-            print('Authorization required.  Run "python3 ./nest_access.py"')
+            logger.error('Authorization required.  Run "python3 ./nest_access.py"')
             raise SystemExit
 
         for structure in NAPI.structures:
-            print('Structure %s' % structure.name)
-            print('    Away: %s' % structure.away)
-            print('    Devices:')
+            logger.debug('Structure %s' % structure.name)
+            logger.debug('    Away: %s' % structure.away)
+            logger.debug('    Devices:')
 
             for device in structure.thermostats:
-                print('        Device: %s' % device.name)
-                print('            Temp: %0.1f' % device.temperature)
+                logger.debug('        Device: %s' % device.name)
+                logger.debug('            Temp: %0.1f' % device.temperature)
                 nest_temperature = device.temperature
     except requests.exceptions.ConnectionError as errec:
-        print("Nest API: Error Connecting:", errec)
-        print('-W- Is network down?')
-        # log_error(error_type='OWM API: ConnectionError')
+        logger.debug("Nest API: Error Connecting: %s" % errec)
+        logger.warning('-W- Is network down?')
     finally:
         # disable API if a network error encountered
         if nest_temperature == 35.0:
             NEST_API = False
 
-print("Nest API enabled:", NEST_API)
+logger.info("Nest API enabled: %s" % NEST_API)
 
 if OWM_API:
     outside_temperature = 42
@@ -220,21 +239,20 @@ if OWM_API:
     try:
         one_call = mgr.one_call(owm_lat, owm_lon)
         currently = one_call.current
-        print(currently.status)
-        print(currently.detailed_status)
-        print(currently.reference_time())
-        print(currently.temperature(unit='fahrenheit'))
+        s = currently.status + " - " + currently.detailed_status + " - " \
+            + pformat(currently.temperature(unit='fahrenheit'))
+        logger.debug(s)
     except requests.exceptions.ConnectionError as errec:
-        print("OWM API: Error Connecting:", errec)
-        print('-W- Is network down?')
+        logger.error("OWM API: Error Connecting: %s" % errec)
+        logger.warning('-W- Is network down?')
     except OwmExceptions.APIRequestError as errapi:
-        print("OWM API Error:", errapi)
+        logger.error("OWM API Error: %s" % errapi)
     finally:
         # disable API if a network error encountered
         if not currently:
             OWM_API = False
 
-print("OWM API enabled:", OWM_API)
+logger.info("OWM API enabled: %s" % OWM_API)
 
 ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
 
@@ -243,7 +261,7 @@ exit_sentinel = Event()
 
 
 def exit_gracefully(signum, frame):
-    print(
+    logger.warning(
         "Received signal "
         + str(signum)
         + " on line "
@@ -326,7 +344,7 @@ def location_updated(location):
 def update_location_nest():
     try:
         if NAPI.authorization_required:
-            print(
+            logger.error(
                 'Authorization required.  Run \
                 "python3 ./nest_access.py"'
             )
@@ -335,16 +353,16 @@ def update_location_nest():
         for structure in NAPI.structures:
             for device in structure.thermostats:
                 nest_temperature = device.temperature
-                # print('Nest temperature: {0}'.format(nest_temperature))
+                logger.debug('Nest temperature: {0}'.format(nest_temperature))
     except requests.exceptions.ConnectionError as errec:
-        print("NEST API: Error Connecting:", errec)
-        print('-W- Is network down?')
+        logger.error("NEST API: Error Connecting: %s" % errec)
+        logger.warning('-W- Is network down?')
         log_error(error_type='NEST API: ConnectionError')
     except IndexError as e:
-        print("NEST API: IndexError:", e)
+        logger.error("NEST API: IndexError: %s" % e)
         log_error(error_type='NEST API: IndexError')
     except nest.nest.APIError as errnapi:
-        print("NEST API: APIError:", errnapi)
+        logger.error("NEST API: APIError: %s" % errnapi)
         log_error(error_type='NEST API: APIError')
 
     RECENT_READINGS['nest'] = nest_temperature
@@ -358,22 +376,21 @@ def update_location_owm():
     except requests.exceptions.HTTPError as e:
         # Need an 404, 503, 500, 403 etc.
         status_code = e.response.status_code
-        print("HTTPError:", status_code, e)
+        logger.error("HTTPError: %s %s" % (status_code, e))
         log_error(error_type='OWM API: HTTPError')
     except requests.exceptions.ConnectionError as errec:
-        print("OWM API: Error Connecting:", errec)
-        print('-W- Is network down?')
+        logger.error("OWM API: Error Connecting: %s" % errec)
+        logger.warning('-W- Is network down?')
         log_error(error_type='OWM API: ConnectionError')
     except OwmExceptions.APIRequestError as errapi:
-        print("OWM API Error:", errapi)
+        logger.error("OWM API Error: %s" % errapi)
         log_error(error_type='OWM API: APIRequestError')
-    # print("OWM API:", end="  ")
 
     outside_temperature = 42
     try:
         outside_temperature = currently.temperature(unit='fahrenheit')['temp']
     except:
-        print("OWM: Unexpected error:", sys.exc_info()[0])
+        logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
         raise
 
     # save values for periodic logging
@@ -447,23 +464,23 @@ def log_data():
             wind_speed,
         )
 
-        print('Wrote a row to {0}'.format(phant_obj.title), end=" ")
-        print((phant_obj.remaining_bytes, phant_obj.cap))
+        logger.info('Wrote a row to "{0}"'.format(phant_obj.title))
+        # logger.debug(pformat(phant_obj.stats))
     except ValueError as errv:
-        print('-E- Error logging to {}'.format(phant_obj.title))
-        print('-W- Is phant server down?')
-        print('ValueError: {}'.format(str(errv)))
+        logger.error('-E- Error logging to {}'.format(phant_obj.title))
+        logger.warning('-W- Is phant server down?')
+        logger.error('ValueError: {}'.format(str(errv)))
         log_error(error_type='ValueError')
     except requests.exceptions.ConnectionError as errec:
-        print("Error Connecting:", errec)
-        print('-W- Is network down?')
+        logger.error("Error Connecting: %s" % errec)
+        logger.error('-W- Is network down?')
         log_error(error_type='ConnectionError')
     except requests.exceptions.Timeout as errt:
-        print("Timeout Error:", errt)
+        logger.error("Timeout Error:", errt)
         log_error(error_type='Timeout')
 
     except requests.exceptions.RequestException as err:
-        print("Network request Error:", err)
+        logger.error("Network request Error: %s" % err)
         log_error(error_type='RequestError')
 
     LOGGING_COUNT = LOGGING_COUNT + 1
@@ -489,11 +506,12 @@ def update_location_sensor():
     ambient_pressure = pressure / 100.0
 
     if VERBOSE_BMP_READINGS:
-        print("BMP Sensor", end=" ")
-        print("  Temp(°C): %.1f°C" % temp, end=" ")
-        print("  Temp(°F): %.1f°F" % temp_in_F, end=" ")
-        print("  Pressure: %.1f hPa" % ambient_pressure, end=" ")
-        print("  Altitude: %.1f m" % altitude)
+        s = "BMP Sensor" + " "
+        s += "  Temp(°C): %.1f°C" % temp + " "
+        s += "  Temp(°F): %.1f°F" % temp_in_F + " "
+        s += "  Pressure: %.1f hPa" % ambient_pressure + " "
+        s += "  Altitude: %.1f m" % altitude
+        logger.info(s)
 
     # save values for periodic logging
     LOGGING_DATA['in_humid'] = 0
@@ -510,7 +528,7 @@ def display_location_temperature(location):
     temperature_digits = get_temperature_digits_in_fahrenheit(
         temperature_in_F, location
     )
-    # print(temperature_digits)
+    # logger.debug(temperature_digits)
     try:
         display_temperature_digits(temperature_digits, display_handle=segment)
     except IOError:
@@ -530,6 +548,13 @@ def log_error(error_type='UnknownError'):
 
 
 def main():
+
+    try:
+        logger.info("Using temperature display I2C address: 0x%02x" % (segment._device._address,))
+        logger.info("Using temperature sensor I2C address: 0x%02x" % (bmp._device._address,))
+    except:
+        pass
+
     def graceful_exit():
         # Turn off LED
         segment.clear()
@@ -541,8 +566,8 @@ def main():
         signal.signal(getattr(signal, 'SIG' + sig), exit_gracefully)
 
     # output current process id
-    print("Weather logger PID is:", os.getpid())
-    print("Starting main loop... Press CTRL+C to exit")
+    logger.info("Weather logger PID is: %d" % os.getpid())
+    logger.info("Starting main loop... Press CTRL+C to exit")
     number_of_locations = len(ALTERNATE_TEMPERATURE_LOCATIONS)
     start_time = time.time()
     display_cycle_number = -1
@@ -553,7 +578,7 @@ def main():
         current_location = ALTERNATE_TEMPERATURE_LOCATIONS[current_location_index]
 
         if is_time_to_update(start_time, current_location):
-            # print("Updating", current_location)
+            # logger.debug("Updating %s" % current_location)
             update_location(current_location)
 
         display_location_temperature(current_location)
@@ -572,3 +597,6 @@ def main():
         )
 
     graceful_exit()
+
+if __name__ == '__main__':
+    main()
