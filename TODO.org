@@ -52,5 +52,5 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [ ] add systemd / journal logging
 
 - [ ] .service systemd unit automation
-  - [ ] add python3 systemd hooks
-  - [ ] incorporate into setup?
+  - [ ] ~add python3 systemd hooks~
+  - [ ] ~incorporate into setup?~

@@ -17,6 +17,8 @@ fi
 cd "${clone_dir}"/
 
 # refer to https://www.freedesktop.org/software/systemd/man/systemd.unit.html#User%20Unit%20Search%20Path
+# - Canonical directory requires root access: pkg-config systemd --variable=systemduserunitdir
+# - the following variable only requires user access
 MY_SYSTEMD_USER_UNIT_DIR=/home/pi/.config/systemd/user/
 mkdir -p "${MY_SYSTEMD_USER_UNIT_DIR}"
 cp -av "${clone_dir}"/etc/timetemp_7segment_clock.service  "${MY_SYSTEMD_USER_UNIT_DIR}"

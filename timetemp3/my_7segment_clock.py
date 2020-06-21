@@ -26,9 +26,6 @@ LED_SEGMENT_I2C_ADDRESS = 0x70
 # Number of seconds to wait after display is written
 DISPLAY_SLEEP_DURATION = 1 / 4
 
-# Initialize LED display
-segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
-
 io_error_count = 0
 
 
@@ -53,6 +50,39 @@ class GracefulKiller:
 
 
 def main():
+    global io_error_count
+
+    import logging
+    VERBOSITY = logging.INFO # set to DEBUG for more verbose
+
+    logger = logging.getLogger('7_segment_clock')
+    logger.setLevel(VERBOSITY) # set to DEBUG for more verbose
+
+    # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
+    INVOCATION_ID = os.getenv('INVOCATION_ID')
+    if INVOCATION_ID is not None:
+        from systemd import journal
+        jH = journal.JournalHandler()
+        jH.setLevel(VERBOSITY)
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        jH.setFormatter(formatter)
+        logger.addHandler(jH)
+        logger.debug('INVOCATION_ID=%s' % INVOCATION_ID)
+    else:
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        consoleHandler.setFormatter(formatter)
+        logger.addHandler(consoleHandler)
+        logger.info('Not running from systemd')
+
+    # Initialize LED display
+    segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
+    try:
+        logger.info("Using clock display I2C address: 0x%02x" % (segment._device._address,))
+    except:
+        pass
+
     def graceful_exit():
         # Turn off LED
         segment.clear()
@@ -60,11 +90,10 @@ def main():
         exit(0)
 
     # output current process id
-    print("My PID is:", os.getpid())
+    logger.info("My PID is: %d" % os.getpid())
     killer = GracefulKiller()
 
-    print("Starting main loop")
-    print("Press CTRL+C to exit")
+    logger.info("Starting main loop -  Press CTRL+C to exit")
     while not killer.kill_now:
         # Periodically update the time on a 4 char, 7-segment display
         try:
@@ -91,4 +120,5 @@ def main():
 
 # added in case script is run directly
 if __name__ == '__main__':
+    
     main()
