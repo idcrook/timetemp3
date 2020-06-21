@@ -476,7 +476,7 @@ def log_data():
         logger.error('-W- Is network down?')
         log_error(error_type='ConnectionError')
     except requests.exceptions.Timeout as errt:
-        logger.error("Timeout Error:", errt)
+        logger.error("Timeout Error: %s" % errt)
         log_error(error_type='Timeout')
 
     except requests.exceptions.RequestException as err:
