@@ -13,7 +13,8 @@ import sys
 import time
 
 import json
-import pathlib
+
+# import pathlib
 from pprint import pformat
 import signal
 from threading import Event
@@ -40,12 +41,13 @@ usage = """
 # these are for debug output, not data logging
 logger = logging.getLogger('weather_logger')
 VERBOSITY = logging.INFO  # set to logging.DEBUG for more verbose
-logger.setLevel(VERBOSITY) 
+logger.setLevel(VERBOSITY)
 
 # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
 INVOCATION_ID = os.getenv('INVOCATION_ID')
 if INVOCATION_ID is not None:
-    from systemd import journal # sudo apt install python3-systemd
+    from systemd import journal  # sudo apt install python3-systemd
+
     jH = journal.JournalHandler()
     jH.setLevel(VERBOSITY)
     formatter = logging.Formatter('%(levelname)s - %(message)s')
@@ -59,7 +61,6 @@ else:
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
     logger.info('Not running from systemd')
-
 
 # Logging sensor readings to Phant
 LOGGING = True
@@ -149,6 +150,7 @@ except:
 logger.debug(app_config_json)
 logger.debug(phant_config_json)
 
+
 def convert_json_string_to_hexadecimal_value(s):
     value = 0
     try:
@@ -194,9 +196,26 @@ bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
 if LOGGING:
     # Read in Phant config file
     phant_obj = Phant(jsonPath=phant_config_json)
-    logger.info('Sensor measurements taken every {0} seconds'.format(SENSOR_MEASUREMENT_INTERVAL))
-    logger.info('Logging to "{0}" every {1} seconds.'.format(phant_obj.title, LOGGING_PERIOD_SECONDS))
-    logger.info(pformat(phant_obj.stats))
+    logger.info(
+        'Sensor measurements taken every {0} seconds'.format(
+            SENSOR_MEASUREMENT_INTERVAL
+        )
+    )
+    logger.info(
+        'Logging to "{0}" every {1} seconds.'.format(
+            phant_obj.title, LOGGING_PERIOD_SECONDS
+        )
+    )
+    try:
+        logger.info(pformat(phant_obj.stats))
+    except json.decoder.JSONDecodeError as je:
+        logger.error("Phant API error: %s" % je)
+        LOGGING = False
+    except requests.exceptions.ConnectionError as ce:
+        logger.error("Phant API error: %s" % ce)
+        LOGGING = False
+
+logger.info("Logging to phant enabled: %s" % LOGGING)
 
 # Initialize 'NAPI' and 'nest_temperature'
 global NAPI
@@ -239,8 +258,13 @@ if OWM_API:
     try:
         one_call = mgr.one_call(owm_lat, owm_lon)
         currently = one_call.current
-        s = currently.status + " - " + currently.detailed_status + " - " \
+        s = (
+            currently.status
+            + " - "
+            + currently.detailed_status
+            + " - "
             + pformat(currently.temperature(unit='fahrenheit'))
+        )
         logger.debug(s)
     except requests.exceptions.ConnectionError as errec:
         logger.error("OWM API: Error Connecting: %s" % errec)
@@ -249,7 +273,12 @@ if OWM_API:
         logger.error("OWM API Error: %s" % errapi)
     finally:
         # disable API if a network error encountered
-        if not currently:
+        try:
+            if not currently:
+                logger.error("OWM API down")
+                OWM_API = False
+        except NameError as ne:
+            logger.error("OWM API down")
             OWM_API = False
 
 logger.info("OWM API enabled: %s" % OWM_API)
@@ -370,50 +399,57 @@ def update_location_nest():
 
 
 def update_location_owm():
-    try:
-        one_call = mgr.one_call(owm_lat, owm_lon)
-        currently = one_call.current
-    except requests.exceptions.HTTPError as e:
-        # Need an 404, 503, 500, 403 etc.
-        status_code = e.response.status_code
-        logger.error("HTTPError: %s %s" % (status_code, e))
-        log_error(error_type='OWM API: HTTPError')
-    except requests.exceptions.ConnectionError as errec:
-        logger.error("OWM API: Error Connecting: %s" % errec)
-        logger.warning('-W- Is network down?')
-        log_error(error_type='OWM API: ConnectionError')
-    except OwmExceptions.APIRequestError as errapi:
-        logger.error("OWM API Error: %s" % errapi)
-        log_error(error_type='OWM API: APIRequestError')
+    global OWM_API
 
-    outside_temperature = 42
-    try:
-        outside_temperature = currently.temperature(unit='fahrenheit')['temp']
-    except:
-        logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
-        raise
+    if OWM_API:
+        try:
+            one_call = mgr.one_call(owm_lat, owm_lon)
+            currently = one_call.current
+        except requests.exceptions.HTTPError as e:
+            # Need an 404, 503, 500, 403 etc.
+            status_code = e.response.status_code
+            logger.error("HTTPError: %s %s" % (status_code, e))
+            log_error(error_type='OWM API: HTTPError')
+        except requests.exceptions.ConnectionError as errec:
+            logger.error("OWM API: Error Connecting: %s" % errec)
+            logger.warning('-W- Is network down?')
+            log_error(error_type='OWM API: ConnectionError')
+        except OwmExceptions.APIRequestError as errapi:
+            logger.error("OWM API Error: %s" % errapi)
+            log_error(error_type='OWM API: APIRequestError')
 
-    # save values for periodic logging
-    LOGGING_DATA['cloudiness'] = currently.clouds
-    LOGGING_DATA['cond'] = currently.status
-    LOGGING_DATA['cond_desc'] = currently.detailed_status
-    LOGGING_DATA['dew_point'] = currently.dewpoint
-    LOGGING_DATA['dt'] = currently.ref_time
-    LOGGING_DATA['out_feels_like'] = currently.temperature(unit='fahrenheit')[
-        'feels_like'
-    ]
-    LOGGING_DATA['out_humid'] = currently.humidity
-    LOGGING_DATA['out_pres'] = currently.pressure['press']
-    LOGGING_DATA['out_temp'] = outside_temperature
-    LOGGING_DATA['uvi'] = currently.uvi
-    LOGGING_DATA['weather_code'] = currently.weather_code
-    LOGGING_DATA['weather_icon_name'] = currently.weather_icon_name
-    wind = currently.wind(unit='miles_hour')
-    LOGGING_DATA['wind_deg'] = wind['deg']
-    LOGGING_DATA['wind_speed'] = wind['speed']
+        outside_temperature = 42
+        try:
+            outside_temperature = currently.temperature(unit='fahrenheit')['temp']
+        except UnboundLocalError as e:
+            logger.error("OWM: API Failed: %s" % e)
+            OWM_API = False
+        except:
+            logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
+            raise
 
-    RECENT_READINGS['outdoor'] = outside_temperature
-    location_updated('outdoor')
+    if OWM_API:
+        # save values for periodic logging
+        LOGGING_DATA['cloudiness'] = currently.clouds
+        LOGGING_DATA['cond'] = currently.status
+        LOGGING_DATA['cond_desc'] = currently.detailed_status
+        LOGGING_DATA['dew_point'] = currently.dewpoint
+        LOGGING_DATA['dt'] = currently.ref_time
+        LOGGING_DATA['out_feels_like'] = currently.temperature(unit='fahrenheit')[
+            'feels_like'
+        ]
+        LOGGING_DATA['out_humid'] = currently.humidity
+        LOGGING_DATA['out_pres'] = currently.pressure['press']
+        LOGGING_DATA['out_temp'] = outside_temperature
+        LOGGING_DATA['uvi'] = currently.uvi
+        LOGGING_DATA['weather_code'] = currently.weather_code
+        LOGGING_DATA['weather_icon_name'] = currently.weather_icon_name
+        wind = currently.wind(unit='miles_hour')
+        LOGGING_DATA['wind_deg'] = wind['deg']
+        LOGGING_DATA['wind_speed'] = wind['speed']
+
+        RECENT_READINGS['outdoor'] = outside_temperature
+        location_updated('outdoor')
 
 
 def log_data():
@@ -550,8 +586,13 @@ def log_error(error_type='UnknownError'):
 def main():
 
     try:
-        logger.info("Using temperature display I2C address: 0x%02x" % (segment._device._address,))
-        logger.info("Using temperature sensor I2C address: 0x%02x" % (bmp._device._address,))
+        logger.info(
+            "Using temperature display I2C address: 0x%02x"
+            % (segment._device._address,)
+        )
+        logger.info(
+            "Using temperature sensor I2C address: 0x%02x" % (bmp._device._address,)
+        )
     except:
         pass
 
@@ -597,6 +638,7 @@ def main():
         )
 
     graceful_exit()
+
 
 if __name__ == '__main__':
     main()
