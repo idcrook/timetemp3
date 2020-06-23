@@ -194,13 +194,13 @@ bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
 # logger.debug(pathlib.Path().absolute())
 
 if LOGGING:
-    # Read in Phant config file
-    phant_obj = Phant(jsonPath=phant_config_json)
     logger.info(
         'Sensor measurements taken every {0} seconds'.format(
             SENSOR_MEASUREMENT_INTERVAL
         )
     )
+    # Read in Phant feed config file
+    phant_obj = Phant(jsonPath=phant_config_json)
     logger.info(
         'Logging to "{0}" every {1} seconds.'.format(
             phant_obj.title, LOGGING_PERIOD_SECONDS
@@ -247,6 +247,7 @@ if NEST_API:
     finally:
         # disable API if a network unavailable or error encountered
         if nest_temperature == 35.0:
+            logger.error("Unknown Nest API Error")
             NEST_API = False
 
 logger.info("Nest API enabled: %s" % NEST_API)
@@ -588,6 +589,7 @@ def log_error(error_type='UnknownError'):
 
 
 def main():
+    global ALTERNATE_TEMPERATURE_LOCATION_ENABLES
 
     try:
         logger.info(
@@ -622,6 +624,10 @@ def main():
         current_location_index = display_cycle_number % number_of_locations
         current_location = ALTERNATE_TEMPERATURE_LOCATIONS[current_location_index]
 
+        # skip update if location is not enabled
+        if not is_location_enabled(current_location):
+            continue
+
         if is_time_to_update(start_time, current_location):
             # logger.debug("Updating %s" % current_location)
             update_location(current_location)
@@ -640,6 +646,8 @@ def main():
                 - time.time(),
             )
         )
+        # FIXME: refactor to delegate this to a common function
+        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
 
     graceful_exit()
 
