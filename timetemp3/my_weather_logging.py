@@ -242,10 +242,10 @@ if NEST_API:
                 logger.debug('            Temp: %0.1f' % device.temperature)
                 nest_temperature = device.temperature
     except requests.exceptions.ConnectionError as errec:
-        logger.debug("Nest API: Error Connecting: %s" % errec)
+        logger.error("Nest API: Error Connecting: %s" % errec)
         logger.warning('-W- Is network down?')
     finally:
-        # disable API if a network error encountered
+        # disable API if a network unavailable or error encountered
         if nest_temperature == 35.0:
             NEST_API = False
 
@@ -394,8 +394,12 @@ def update_location_nest():
         logger.error("NEST API: APIError: %s" % errnapi)
         log_error(error_type='NEST API: APIError')
 
-    RECENT_READINGS['nest'] = nest_temperature
-    location_updated('nest')
+    try:
+        RECENT_READINGS['nest'] = nest_temperature
+        location_updated('nest')
+    except UnboundLocalError as e:
+        logger.error("NEST API Error: Network down? %s" % e)
+        # FIXME: turn off enable if this happens a bunch
 
 
 def update_location_owm():

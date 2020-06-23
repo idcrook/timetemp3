@@ -55,4 +55,4 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [X] +add python3 systemd hooks+
   - [X] +incorporate into setup?+
 
-- [ ] Network API error handling
+- [X] Network API error handling
