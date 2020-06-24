@@ -56,3 +56,8 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [X] +incorporate into setup?+
 
 - [X] Network API error handling
+
+- [ ] Add testing
+  - [ ] refactor network APIs to separate file
+  - [ ] add tests for i2c device wrapper code
+  - [ ] add tests display formatting
