@@ -16,7 +16,6 @@ def get_version(rel_path):
     else:
         raise RuntimeError("Unable to find version string.")
 
-long_description = read("README.md")
 
 setuptools.setup(
     name="timetemp3",
@@ -24,7 +23,7 @@ setuptools.setup(
     author="David Crook",
     author_email="idcrook@users.noreply.github.com",
     description="Display time/temperature on Raspberry Pi and log to cloud",
-    long_description=long_description,
+    long_description=read("README.md"),
     long_description_content_type="text/markdown",
     url="https://github.com/idcrook/timetemp3",
     packages=setuptools.find_packages(),
@@ -53,10 +52,13 @@ setuptools.setup(
             'timetemp_weather_logging=timetemp3.my_weather_logging:main',
         ],
     },
+    test_suite='nose.collector',
+    tests_require=['nose'],
 )
 
 """ 
  - https://packaging.python.org/tutorials/packaging-projects/#packaging-your-project
+ - https://python-packaging.readthedocs.io/en/latest/
  - https://packaging.python.org/guides/distributing-packages-using-setuptools/
  - https://packaging.python.org/guides/single-sourcing-package-version/
 """

@@ -73,6 +73,19 @@ cd /home/pi/projects/timetemp3/
 conf/install_services.sh
 ```
 
+
+Test
+====
+
+```shell
+# run tests from setup
+python3 setup.py test
+
+# manually run tests
+pip3 install nose
+nosetests
+```
+
 TODO
 ====
 
