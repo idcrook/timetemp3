@@ -33,6 +33,9 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
         "Natural Language :: English",
         "Topic :: Home Automation",
+        "Topic :: System :: Hardware",
+        "Topic :: System :: Logging",
+        "Topic :: System :: Monitoring",
         "Environment :: Console"
     ],
     python_requires='>=3.6',
