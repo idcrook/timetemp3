@@ -19,7 +19,7 @@ sudo apt install python3-systemd
 # additional system dependencies for Adafruit-LED-Backpack
 sudo apt install python3-smbus python3-pil
 
-# work-around for missing geojson dependency in current pyowm development
+# work-around for geojson dependency in pyowm 'develop' branch
 pip3 install --user geojson
 ```
 

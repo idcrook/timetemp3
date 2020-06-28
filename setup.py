@@ -1,11 +1,26 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+import codecs
+import os.path
+
+def read(rel_path):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(here, rel_path), 'r') as fp:
+        return fp.read()
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
+
+long_description = read("README.md")
 
 setuptools.setup(
     name="timetemp3",
-    version="0.1.0",
+    version=get_version("timetemp3/__init__.py"),
     author="David Crook",
     author_email="idcrook@users.noreply.github.com",
     description="Display time/temperature on Raspberry Pi and log to cloud",
@@ -17,6 +32,9 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",
+        "Natural Language :: English",
+        "Topic :: Home Automation",
+        "Environment :: Console"
     ],
     python_requires='>=3.6',
     install_requires=[
@@ -36,3 +54,9 @@ setuptools.setup(
         ],
     },
 )
+
+""" 
+ - https://packaging.python.org/tutorials/packaging-projects/#packaging-your-project
+ - https://packaging.python.org/guides/distributing-packages-using-setuptools/
+ - https://packaging.python.org/guides/single-sourcing-package-version/
+"""
