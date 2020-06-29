@@ -3,10 +3,12 @@ import setuptools
 import codecs
 import os.path
 
+
 def read(rel_path):
     here = os.path.abspath(os.path.dirname(__file__))
     with codecs.open(os.path.join(here, rel_path), 'r') as fp:
         return fp.read()
+
 
 def get_version(rel_path):
     for line in read(rel_path).splitlines():
@@ -39,11 +41,12 @@ setuptools.setup(
         "Environment :: Console"
     ],
     python_requires='>=3.6',
+    # setup_requires=['flake8'],
     install_requires=[
         # 'geojson>=2.5.0',  # missing implicit dependency in pyowm develop/v3 branch
         'python-nest>=4.1.0',
         # 'psutil',
-        # 'click', 
+        # 'click',
         'Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@master#egg=Adafruit_BMP-1.5.2',
         'Adafruit_LED_Backpack @ git+https://github.com/adafruit/Adafruit_Python_LED_Backpack.git@master#egg=Adafruit_LED_Backpack-1.8.1',
         'phant3 @ https://github.com/idcrook/python3-phant.git@master#egg=phant3-0.1.0',
@@ -59,7 +62,7 @@ setuptools.setup(
     tests_require=['nose'],
 )
 
-""" 
+"""
  - https://packaging.python.org/tutorials/packaging-projects/#packaging-your-project
  - https://python-packaging.readthedocs.io/en/latest/
  - https://packaging.python.org/guides/distributing-packages-using-setuptools/

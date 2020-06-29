@@ -279,7 +279,7 @@ if OWM_API:
                 logger.error("OWM API down")
                 OWM_API = False
         except NameError as ne:
-            logger.error("OWM API down")
+            logger.error("OWM API down: %s" % ne)
             OWM_API = False
 
 logger.info("OWM API enabled: %s" % OWM_API)

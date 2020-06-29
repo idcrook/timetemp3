@@ -54,8 +54,8 @@ def main():
 
     import logging
     logger = logging.getLogger('7_segment_clock')
-    VERBOSITY = logging.INFO # set to DEBUG for more verbose
-    logger.setLevel(VERBOSITY) 
+    VERBOSITY = logging.INFO  # set to DEBUG for more verbose
+    logger.setLevel(VERBOSITY)
 
     # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
     INVOCATION_ID = os.getenv('INVOCATION_ID')
@@ -119,5 +119,5 @@ def main():
 
 # added in case script is run directly
 if __name__ == '__main__':
-    
+
     main()
