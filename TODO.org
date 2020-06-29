@@ -1,14 +1,18 @@
 #+STARTUP: showeverything
 
-* Programs todos
-** See below
+* TODOs
+
+** Testing
+
+Refer to [[file:timetemp3/tests/TODO.org][TODO.org]] in ~timetemp3/tests/~ for test-related
+
+* Programs todos - See below
 
 * Package todos
 ** DONE Add author, copyright, etc. tags
 ** DONE Add example .json
 https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 ** DONE systemd installer method
-
 
 * Outline of program
 
@@ -45,7 +49,7 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 - [X] log_error()
 - [X] Signal, Keyboardinterrupt handler
 
-* TODOs
+* DONE
 
 - [X] add logging facilities
   - [X] use for debug/info output instead of print
@@ -57,7 +61,3 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
 
 - [X] Network API error handling
 
-- [ ] Add testing
-  - [ ] refactor network APIs to separate file
-  - [ ] add tests for i2c device wrapper code
-  - [ ] add tests display formatting

@@ -1,0 +1,9 @@
+#+STARTUP: showeverything
+
+* test display formatting
+
+* test hardware access (i2c devices)
+
+* test network calls
+
+
