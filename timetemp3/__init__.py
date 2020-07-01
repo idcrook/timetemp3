@@ -147,6 +147,9 @@ def _lookup_where_temperature_digit(where):
 def get_temperature_digits_in_fahrenheit(temperature, where):
     digits = [None] * 5
 
+    if temperature is None:
+        return digits
+
     # these are mostly constant
     digits[DIGIT_4] = 'F'
     digits[DIGIT_COLON] = False

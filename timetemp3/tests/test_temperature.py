@@ -64,3 +64,7 @@ class TestTemperatureDigits(TestCase):
     def test_is_out_of_range(self):
         digits = timetemp3.get_temperature_digits_in_fahrenheit(-100.0, 'outdoor')
         self.assertEqual(digits, ['E', 'E', 'E', 'E', True])
+
+    def test_invalid_input_None(self):
+        digits = timetemp3.get_temperature_digits_in_fahrenheit(None, 'outdoor')
+        self.assertEqual(digits, [None] * 5)
