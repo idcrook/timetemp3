@@ -168,7 +168,7 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
 
         digits[DIGIT_2] = int(round(temperature) % 10)  # Ones
         digits[DIGIT_3] = _lookup_where_temperature_digit(where)
-    elif round(temperature * 10.0) > -94.9:  # -9 to 0 degrees : "-#°F"
+    elif round(temperature * 10.0) >= -95.0:  # -9 to 0 degrees : "-#°F"
         digits[DIGIT_1] = '-'
         digits[DIGIT_2] = int(round(abs(temperature)) % 10)  # Ones
         digits[DIGIT_3] = _lookup_where_temperature_digit(where)
