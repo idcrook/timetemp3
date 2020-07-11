@@ -3,6 +3,8 @@ timetemp3
 
 Monitor and display time/temp with RasPi and log to cloud
 
+![Photo of two LED displays with time and temperature](dual_led_operating.jpg)
+
 Install
 -------
 
