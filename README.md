@@ -3,6 +3,11 @@ timetemp3
 
 Monitor and display time/temp with RasPi and log to cloud
 
+
+Based on https://github.com/idcrook/timetemp 
+
+See original project for additional hardware details, setup, and more, including a webpage that displays live charts of data.
+
 ![Photo of two LED displays with time and temperature](dual_led_operating.jpg)
 
 Install
