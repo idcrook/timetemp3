@@ -394,6 +394,9 @@ def update_location_nest():
     except nest.nest.APIError as errnapi:
         logger.error("NEST API: APIError: %s" % errnapi)
         log_error(error_type='NEST API: APIError')
+    except json.decoder.JSONDecodeError as jsone:
+        logger.error("NEST API: JSON Decoder Network Error: %s" % jsone)
+        log_error(error_type='NEST API: JSON Decoder')
 
     try:
         RECENT_READINGS['nest'] = nest_temperature
