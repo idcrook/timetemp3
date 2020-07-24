@@ -431,7 +431,8 @@ def update_location_owm():
             outside_temperature = currently.temperature(unit='fahrenheit')['temp']
         except UnboundLocalError as e:
             logger.error("OWM: API Failed: %s" % e)
-            OWM_API = False
+            # TODO: add a saturating threshold of number of attempts before turning off
+            # OWM_API = False
         except:
             logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
             raise
@@ -580,6 +581,7 @@ def display_location_temperature(location):
 
 
 ERROR_TABLES = {}
+PRINT_ERROR_TABLES_ON_LOGGING = True
 
 
 def log_error(error_type='UnknownError'):
@@ -589,6 +591,9 @@ def log_error(error_type='UnknownError'):
         ERROR_TABLES[error_type] = 1
     else:
         ERROR_TABLES[error_type] = ERROR_TABLES[error_type] + 1
+
+    if PRINT_ERROR_TABLES_ON_LOGGING:
+        logger.warning("error tables: %s", ERROR_TABLES)
 
 
 def main():
