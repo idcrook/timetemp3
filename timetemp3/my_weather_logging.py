@@ -438,27 +438,36 @@ def update_location_owm():
             raise
 
     if OWM_API:
-        # save values for periodic logging
-        LOGGING_DATA['cloudiness'] = currently.clouds
-        LOGGING_DATA['cond'] = currently.status
-        LOGGING_DATA['cond_desc'] = currently.detailed_status
-        LOGGING_DATA['dew_point'] = currently.dewpoint
-        LOGGING_DATA['dt'] = currently.ref_time
-        LOGGING_DATA['out_feels_like'] = currently.temperature(unit='fahrenheit')[
-            'feels_like'
-        ]
-        LOGGING_DATA['out_humid'] = currently.humidity
-        LOGGING_DATA['out_pres'] = currently.pressure['press']
-        LOGGING_DATA['out_temp'] = outside_temperature
-        LOGGING_DATA['uvi'] = currently.uvi
-        LOGGING_DATA['weather_code'] = currently.weather_code
-        LOGGING_DATA['weather_icon_name'] = currently.weather_icon_name
-        wind = currently.wind(unit='miles_hour')
-        LOGGING_DATA['wind_deg'] = wind['deg']
-        LOGGING_DATA['wind_speed'] = wind['speed']
+        try:
+            # save values for periodic logging
+            LOGGING_DATA['cloudiness'] = currently.clouds
+            LOGGING_DATA['cond'] = currently.status
+            LOGGING_DATA['cond_desc'] = currently.detailed_status
+            LOGGING_DATA['dew_point'] = currently.dewpoint
+            LOGGING_DATA['dt'] = currently.ref_time
+            LOGGING_DATA['out_feels_like'] = currently.temperature(unit='fahrenheit')[
+                'feels_like'
+            ]
+            LOGGING_DATA['out_humid'] = currently.humidity
+            LOGGING_DATA['out_pres'] = currently.pressure['press']
+            LOGGING_DATA['out_temp'] = outside_temperature
+            LOGGING_DATA['uvi'] = currently.uvi
+            LOGGING_DATA['weather_code'] = currently.weather_code
+            LOGGING_DATA['weather_icon_name'] = currently.weather_icon_name
+            wind = currently.wind(unit='miles_hour')
+            LOGGING_DATA['wind_deg'] = wind['deg']
+            LOGGING_DATA['wind_speed'] = wind['speed']
+            RECENT_READINGS['outdoor'] = outside_temperature
+            location_updated('outdoor')
+        except UnboundLocalError as e:
+            logger.error("OWM: API Failed: %s" % e)
+            # TODO: add a saturating threshold of number of attempts before turning off
+            # OWM_API = False
+        except:
+            logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
+            raise
 
-        RECENT_READINGS['outdoor'] = outside_temperature
-        location_updated('outdoor')
+
 
 
 def log_data():
