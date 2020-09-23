@@ -36,7 +36,7 @@ now for the fun part
 mkdir ~/projects
 cd ~/projects
 git clone https://github.com/idcrook/timetemp3.git
-cd timetemp3
+cd ~/projects/timetemp3
 
 # perform the python setup, which also includes dependencies
 pip3 install .

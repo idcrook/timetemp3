@@ -49,7 +49,7 @@ setuptools.setup(
         # 'click',
         'Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@master#egg=Adafruit_BMP-1.5.2',
         'Adafruit_LED_Backpack @ git+https://github.com/adafruit/Adafruit_Python_LED_Backpack.git@master#egg=Adafruit_LED_Backpack-1.8.1',
-        'phant3 @ https://github.com/idcrook/python3-phant.git@master#egg=phant3-0.1.0',
+        'phant3 @ git+https://github.com/idcrook/python3-phant.git@master#egg=phant3-0.1.1',
         'pyowm @ git+https://github.com/csparpa/pyowm.git@develop#egg=pyowm-3.0.0',
     ],
     entry_points={
