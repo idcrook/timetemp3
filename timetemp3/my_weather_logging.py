@@ -109,7 +109,7 @@ OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # Use Nest API for another indoor temperature source
 NEST_API = True
-# NEST_API = False
+NEST_API = False
 NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # How long to wait (in seconds) between temperature locations, the key wait

@@ -3,10 +3,10 @@
 # This file is covered by the LICENSING file in the root of this project.
 
 __author__ = "David Crook"
-__copyright__ = "Copyright 2020"
+__copyright__ = "Copyright 2021"
 __credits__ = []
 __license__ = "MIT"
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __maintainer__ = "David Crook"
 __email__ = "idcrook@users.noreply.github.com"
 # __status__ = "Prototype", "Development", or "Production"
