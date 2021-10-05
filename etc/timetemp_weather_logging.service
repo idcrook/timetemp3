@@ -1,18 +1,27 @@
 
 [Unit]
 Description=TimeTemp Temperature Display and Logging
-After=network.target time-sync.target
+Wants=network-online.target
+After=network-online.target time-sync.target
 ConditionPathExists=/home/pi/projects/timetemp3
 
 [Service]
 WorkingDirectory=/home/pi/projects/timetemp3/
+
+# Re: bullseye dhcpcd5: Since DNS lookups are failing at script startup
+# disabling those APIs, wait in loop for DNS before starting 
+ExecStartPre=/bin/bash -c 'until host www.google.com; do sleep 1; done'
+# This works, but on may want to try adding [Unit] After=dhcpcd.target ?
+
 ExecStart=/usr/bin/python3 /home/pi/.local/bin/timetemp_weather_logging conf/weather_logging_config.json conf/phant-config.json
 # actual location: /home/pi/projects/timetemp3/timetemp3/my_weather_logging.py
+
 # do not buffer output (useful for debugging)
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=default.target
+#WantedBy=multi-user.target
 
 # install user unit file
 # - assumes git clone at /home/pi/projects/timetemp3/ and has been installed by pip (to "user" area)
