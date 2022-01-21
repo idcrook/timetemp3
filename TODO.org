@@ -6,6 +6,10 @@
 
 Refer to [[file:timetemp3/tests/TODO.org][TODO.org]] in ~timetemp3/tests/~ for test-related
 
+** FIXME
+
+- [ ] remove python3-systemd package dependency
+
 * Programs todos - See below
 
 * Package todos
@@ -60,4 +64,3 @@ https://python-packaging.readthedocs.io/en/latest/non-code-files.html
   - [X] +incorporate into setup?+
 
 - [X] Network API error handling
-
