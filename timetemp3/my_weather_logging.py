@@ -46,7 +46,14 @@ logger.setLevel(VERBOSITY)
 # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
 INVOCATION_ID = os.getenv('INVOCATION_ID')
 if INVOCATION_ID is not None:
-    from systemd import journal  # sudo apt install python3-systemd
+    try:
+        import systemd     # sudo apt install python3-systemd
+    except ModuleNotFoundError as mnf:
+        print("Missing module: 'systemd'")
+        print("    sudo apt install python3-systemd")
+        raise SystemExit
+
+    from systemd import journal
 
     jH = journal.JournalHandler()
     jH.setLevel(VERBOSITY)
