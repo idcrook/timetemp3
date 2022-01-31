@@ -8,7 +8,7 @@ Refer to [[file:timetemp3/tests/TODO.org][TODO.org]] in ~timetemp3/tests/~ for t
 
 ** FIXME
 
-- [ ] remove python3-systemd package dependency
+- [ ] remove python3-systemd package (hard) dependency
 
 * Programs todos - See below
 
