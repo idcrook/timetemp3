@@ -475,8 +475,6 @@ def update_location_owm():
             raise
 
 
-
-
 def log_data():
     global LOGGING_COUNT, PREVIOUS_UPLOAD_TIME
 
@@ -589,7 +587,7 @@ def display_location_temperature(location):
     temperature_digits = get_temperature_digits_in_fahrenheit(
         temperature_in_F, location
     )
-    # logger.debug(temperature_digits)
+    # logger.info(temperature_digits
     try:
         display_temperature_digits(temperature_digits, display_handle=segment)
     except IOError:

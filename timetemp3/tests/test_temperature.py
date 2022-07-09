@@ -13,6 +13,18 @@ class TestTemperatureDigits(TestCase):
         digits = timetemp3.get_temperature_digits_in_fahrenheit(101.0, 'outdoor')
         self.assertEqual(digits, [1, 0, '1', 'F', False])
 
+    def test_is_range_p100(self):
+        digits = timetemp3.get_temperature_digits_in_fahrenheit(100.0, 'outdoor')
+        self.assertEqual(digits, [1, 0, '0', 'F', False])
+
+    def test_is_range_p99p9(self):
+        digits = timetemp3.get_temperature_digits_in_fahrenheit(99.9, 'outdoor')
+        self.assertEqual(digits, [1, 0, '0', 'F', False])
+    
+    def test_is_range_p99p5(self):
+        digits = timetemp3.get_temperature_digits_in_fahrenheit(99.5, 'outdoor')
+        self.assertEqual(digits, [1, 0, '0', 'F', False])
+    
     def test_is_range_p10_to_p99(self):
         digits = timetemp3.get_temperature_digits_in_fahrenheit(68.0, 'nest')
         self.assertEqual(digits, [6, 8, DEGREES_SYMBOL_ENCODING, 'F', False])

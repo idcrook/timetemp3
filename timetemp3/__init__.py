@@ -154,7 +154,7 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
     digits[DIGIT_4] = 'F'
     digits[DIGIT_COLON] = False
 
-    if round(temperature * 10.0) >= 1000.0:  # 100 degrees or above : "###F"
+    if round(temperature * 10.0) >= 995.0:  # 99.5 degrees or above : "###F"
         digits[DIGIT_1] = int(round(temperature) / 100)  # Hundreds
         digits[DIGIT_2] = int(round(temperature - 100.0) / 10)  # Tens
         digits[DIGIT_3] = str(int(round(temperature) % 10))  # Ones
