@@ -127,7 +127,7 @@ def main():
         # Periodically update the time on a 4 char, 7-segment display
         try:
             now = datetime.datetime.now()
-            clock_digits = get_time_digits(now=now, hour_mode=12)
+            clock_digits = get_time_digits(now=now, hour_mode=HOUR_MODE_12_OR_24)
             # print(clock_digits)
             display_time_digits(
                 clock_digits,
