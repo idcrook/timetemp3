@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# This file is covered by the LICENSING file in the root of this project.
+# This file is covered by the LICENSE file in the root of this project.
+
+# To run: python3 ./my_7segment_clock.py [app_config.json]
 
 import time
 import datetime
@@ -16,19 +18,18 @@ from timetemp3 import (
     display_time_digits,
 )
 
-# To run: python3 ./my_7segment_clock.py
-
 # Set to 12 or 24 hour mode
 DEFAULT_HOUR_MODE_12_OR_24 = 12
 
 # I2C address of display
 DEFAULT_LED_SEGMENT_I2C_ADDRESS = 0x70
-# = 0x71
+# 0x70 == 112
 
 # Number of seconds to wait after display is written
 DISPLAY_SLEEP_DURATION = 1 / 4
 
-io_error_count = 0
+# Counter for errors encountered
+IO_ERROR_COUNT = 0
 
 # These are the variables consumed
 HOUR_MODE_12_OR_24      = DEFAULT_HOUR_MODE_12_OR_24
@@ -55,7 +56,7 @@ class GracefulKiller:
 
 
 def main():
-    global io_error_count
+    global IO_ERROR_COUNT
     global LED_SEGMENT_I2C_ADDRESS
     global HOUR_MODE_12_OR_24
 
@@ -140,8 +141,8 @@ def main():
 
         # IOError: [Errno 121] Remote I/O error would occasionally surface on Raspian stretch
         except IOError:
-            io_error_count += 1
-            print("Caught ", io_error_count, "IOErrors")
+            IO_ERROR_COUNT += 1
+            logger.warning("Caught {cnt:d} IOErrors".format(cnt=IO_ERROR_COUNT))
             time.sleep(2)
 
     graceful_exit()
