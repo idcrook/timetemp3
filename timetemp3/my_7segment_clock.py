@@ -103,10 +103,10 @@ def main():
         segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
     except FileNotFoundError as efnf:
         logger.fatal("Unable to find I2C devices: {0}".format(efnf))
-        # raise SystemExit
+        raise SystemExit
     except BaseException as err:
         logger.fatal(f"Unexpected {err=}, {type(err)=}")
-        # raise
+        raise
     else:
         logger.info("Using clock display I2C address: 0x%02x" % (segment._device._address,))
 
