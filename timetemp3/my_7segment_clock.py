@@ -95,7 +95,7 @@ def main():
         logger.info("No app_config.json available. Using hard-coded defaults.")
 
     logger.info("Config: hour_mode: {hm:d}".format(hm = HOUR_MODE_12_OR_24))
-    logger.info("Config: led_disp_i2c_addr: 0x{addr:02x}".format(addr = LED_SEGMENT_I2C_ADDRESS))
+    logger.info("Config: led_disp_i2c_addr: 0x{addr:02x} ({addr:d})".format(addr = LED_SEGMENT_I2C_ADDRESS))
 
     # Initialize LED display
     segment = None
