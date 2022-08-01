@@ -113,8 +113,9 @@ def main():
 
     def graceful_exit():
         # Turn off LED
-        segment.clear()
-        segment.write_display()
+        if segment is not None:
+            segment.clear()
+            segment.write_display()
         exit(0)
 
     # output current process id
