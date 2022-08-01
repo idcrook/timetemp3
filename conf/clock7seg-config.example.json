@@ -1,0 +1,4 @@
+{
+  "led_disp_i2c_addr": 113,
+  "hour_mode": 24
+}

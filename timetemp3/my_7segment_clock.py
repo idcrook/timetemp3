@@ -4,8 +4,10 @@
 
 import time
 import datetime
+import json
 import os
 import signal
+import sys
 from sys import exit
 
 from timetemp3 import (
@@ -17,17 +19,20 @@ from timetemp3 import (
 # To run: python3 ./my_7segment_clock.py
 
 # Set to 12 or 24 hour mode
-HOUR_MODE_12_OR_24 = 12
+DEFAULT_HOUR_MODE_12_OR_24 = 12
 
 # I2C address of display
-LED_SEGMENT_I2C_ADDRESS = 0x70
-# LED_SEGMENT_I2C_ADDRESS = 0x71
+DEFAULT_LED_SEGMENT_I2C_ADDRESS = 0x70
+# = 0x71
 
 # Number of seconds to wait after display is written
 DISPLAY_SLEEP_DURATION = 1 / 4
 
 io_error_count = 0
 
+# These are the variables consumed
+HOUR_MODE_12_OR_24      = DEFAULT_HOUR_MODE_12_OR_24
+LED_SEGMENT_I2C_ADDRESS = DEFAULT_LED_SEGMENT_I2C_ADDRESS
 
 # via https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
 class GracefulKiller:
@@ -51,6 +56,8 @@ class GracefulKiller:
 
 def main():
     global io_error_count
+    global LED_SEGMENT_I2C_ADDRESS
+    global HOUR_MODE_12_OR_24
 
     import logging
     logger = logging.getLogger('7_segment_clock')
@@ -75,16 +82,31 @@ def main():
         logger.addHandler(consoleHandler)
         logger.info('Not running from systemd')
 
+    # read in any config
+    try:
+        app_config_json = sys.argv[1]
+        # Read in config file
+        with open(app_config_json) as config_file:
+            config = json.loads(config_file.read())
+        LED_SEGMENT_I2C_ADDRESS = config.get('led_disp_i2c_addr', DEFAULT_LED_SEGMENT_I2C_ADDRESS)
+        HOUR_MODE_12_OR_24 = config.get('hour_mode', DEFAULT_HOUR_MODE_12_OR_24)
+
+    except:
+        logger.info("No app_config.json available. Using hard-coded defaults.")
+
+    logger.info("Config: hour_mode: {hm:d}".format(hm = HOUR_MODE_12_OR_24))
+    logger.info("Config: led_disp_i2c_addr: 0x{addr:02x}".format(addr = LED_SEGMENT_I2C_ADDRESS))
+
     # Initialize LED display
     segment = None
     try:
         segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
     except FileNotFoundError as efnf:
         logger.fatal("Unable to find I2C devices: {0}".format(efnf))
-        raise SystemExit
+        # raise SystemExit
     except BaseException as err:
         logger.fatal(f"Unexpected {err=}, {type(err)=}")
-        raise
+        # raise
     else:
         logger.info("Using clock display I2C address: 0x%02x" % (segment._device._address,))
 
@@ -104,7 +126,7 @@ def main():
         # Periodically update the time on a 4 char, 7-segment display
         try:
             now = datetime.datetime.now()
-            clock_digits = get_time_digits(now=now)
+            clock_digits = get_time_digits(now=now, hour_mode=12)
             # print(clock_digits)
             display_time_digits(
                 clock_digits,
