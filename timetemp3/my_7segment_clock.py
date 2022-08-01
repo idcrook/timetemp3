@@ -54,7 +54,7 @@ def main():
 
     import logging
     logger = logging.getLogger('7_segment_clock')
-    VERBOSITY = logging.INFO  # set to DEBUG for more verbose
+    VERBOSITY = logging.DEBUG # logging.INFO  # set to DEBUG for more verbose
     logger.setLevel(VERBOSITY)
 
     # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
@@ -76,11 +76,18 @@ def main():
         logger.info('Not running from systemd')
 
     # Initialize LED display
-    segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
+    segment = None
     try:
+        segment = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
+    except FileNotFoundError as efnf:
+        logger.fatal("Unable to find I2C devices: {0}".format(efnf))
+        raise SystemExit
+    except BaseException as err:
+        logger.fatal(f"Unexpected {err=}, {type(err)=}")
+        raise
+    else:
         logger.info("Using clock display I2C address: 0x%02x" % (segment._device._address,))
-    except:
-        pass
+
 
     def graceful_exit():
         # Turn off LED

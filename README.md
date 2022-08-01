@@ -26,7 +26,7 @@ sudo apt install python3-systemd
 # additional system dependencies for Adafruit-LED-Backpack
 sudo apt install python3-smbus python3-pil
 
-# work-around for geojson dependency in pyowm 'develop' branch
+# work-around for geojson dependency from pyowm 
 pip3 install --user geojson
 ```
 
@@ -40,7 +40,8 @@ cd ~/projects/timetemp3
 
 # perform the python setup, which also includes dependencies
 pip3 install .
-# for development, use instead # pip3 install -e .
+# for development, use instead 
+pip3 install -e .
 ```
 
 Run

@@ -44,13 +44,13 @@ setuptools.setup(
     # setup_requires=['flake8'],
     install_requires=[
         # 'geojson>=2.5.0',  # missing implicit dependency in pyowm develop/v3 branch
-        'python-nest>=4.1.0',
+        'python-nest>=4.2.0',
         # 'psutil',
         # 'click',
-        'Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@master#egg=Adafruit_BMP-1.5.2',
+        'Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@master#egg=Adafruit_BMP-1.5.4',
         'Adafruit_LED_Backpack @ git+https://github.com/adafruit/Adafruit_Python_LED_Backpack.git@master#egg=Adafruit_LED_Backpack-1.8.1',
-        'phant3 @ git+https://github.com/idcrook/python3-phant.git@main#egg=phant3-0.1.1',
-        'pyowm @ git+https://github.com/csparpa/pyowm.git@develop#egg=pyowm-3.0.0',
+        'phant3 @ git+https://github.com/idcrook/python3-phant.git@main#egg=phant3-0.1.2',
+        'pyowm @ git+https://github.com/csparpa/pyowm.git@master#egg=pyowm-3.3.0',
     ],
     entry_points={
         'console_scripts': [
