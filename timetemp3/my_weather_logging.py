@@ -30,8 +30,7 @@ from timetemp3.datalogging import (
     create_phant_obj,
     display_location_temperature,
 )
-import timetemp3.datalogging_config
-from datalogging_config import DATA_LOGGING_FIELDS as LOGGING_FIELDS
+from timetemp3.dataloggingconfig import DATA_LOGGING_FIELDS as LOGGING_FIELDS
 
 import nest  # https://github.com/jkoelker/python-nest/
 from pyowm.owm import OWM  # https://github.com/csparpa/pyowm

@@ -9,14 +9,12 @@ import json
 from pprint import pformat
 import requests  # so can handle exceptions
 
-#import timetemp3
+import timetemp3
 from timetemp3.temperature import (
     get_temperature_digits_in_fahrenheit,
     display_temperature_digits,
 )
 
-#import timetemp3.datalogging_config
-from datalogging_config import DATA_LOGGING_FIELDS as LOGGING_FIELDS
 from phant3.Phant import Phant
 
 # these are for debug output, not data logging
