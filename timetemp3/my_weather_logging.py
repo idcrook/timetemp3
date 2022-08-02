@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# This file is covered by the LICENSING file in the root of this project.
+# This file is covered by the LICENSE file in the root of this project.
 
 #  - read indoor-located pressure/temperature sensor
 #    - log sensor data to a phant server
@@ -26,14 +26,13 @@ from timetemp3 import (
     get_temperature_sensor_handle,
     initialize_and_get_temperature_display_handle,
 )
-from timetemp3.temperature import (
-    get_temperature_digits_in_fahrenheit,
-    display_temperature_digits,
+from timetemp3.datalogging import (
+    create_phant_obj,
+    display_location_temperature,
 )
+import timetemp3.datalogging_config
+from datalogging_config import DATA_LOGGING_FIELDS as LOGGING_FIELDS
 
-from phant3.Phant import Phant
-
-# FIXME: Refactor into timetemp3/__init__.py or a new sensor.py
 import nest  # https://github.com/jkoelker/python-nest/
 from pyowm.owm import OWM  # https://github.com/csparpa/pyowm
 from pyowm.commons import exceptions as OwmExceptions
@@ -73,32 +72,11 @@ else:
     logger.addHandler(consoleHandler)
     logger.info('Not running from systemd')
 
-# Logging sensor readings to Phant
-LOGGING = True
+
 # LOGGING = False
 LOGGING_COUNT = 0
 # borrowed field names from previous project
 LOGGING_DATA = {}
-LOGGING_FIELDS = (
-    "cloudiness",
-    "cond",
-    "cond_desc",
-    "dew_point",
-    "dt",
-    "in_humid",
-    "in_pres",
-    "in_tc",
-    "in_tf",
-    "out_feels_like",
-    "out_humid",
-    "out_pres",
-    "out_temp",
-    "uvi",
-    "weather_code",
-    "weather_icon_name",
-    "wind_deg",
-    "wind_speed",
-)
 
 # How long to wait (in seconds) between uploading measurements.
 LOGGING_PERIOD_SECONDS = 5 * 60
@@ -114,13 +92,9 @@ WEBAPI_PERIOD_SECONDS = 5 * 60
 # Use Open Weather Map API for local weather
 # - https://openweathermap.org/api
 # - https://openweathermap.org/api/one-call-api
-OWM_API = True
-# OWM_API = False
 OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # Use Nest API for another indoor temperature source
-NEST_API = True
-NEST_API = False
 NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # How long to wait (in seconds) between temperature locations, the key wait
@@ -204,6 +178,11 @@ bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
 
 # logger.debug(pathlib.Path().absolute())
 
+LOGGING = config["global"]["enable_logging"]
+NEST_API = config["global"]["enable_nest_api"]
+OWM_API = config["global"]["enable_owm_api"]
+BMP_API = config["global"]["enable_bmp_api"]
+
 if LOGGING:
     logger.info(
         'Sensor measurements taken every {0} seconds'.format(
@@ -211,22 +190,23 @@ if LOGGING:
         )
     )
     # Read in Phant feed config file
-    phant_obj = Phant(jsonPath=phant_config_json)
+    try:
+        phant_obj = create_phant_obj(phant_config_json)
+    except:
+        LOGGING = False
+
+   
+if LOGGING:
+    logger.info("Logging to phant enabled")
     logger.info(
         'Logging to "{0}" every {1} seconds.'.format(
             phant_obj.title, LOGGING_PERIOD_SECONDS
         )
     )
-    try:
-        logger.info(pformat(phant_obj.stats))
-    except json.decoder.JSONDecodeError as je:
-        logger.error("Phant API error: %s" % je)
-        LOGGING = False
-    except requests.exceptions.ConnectionError as ce:
-        logger.error("Phant API error: %s" % ce)
-        LOGGING = False
+else:
+    logger.warning("Logging to phant disabled")
 
-logger.info("Logging to phant enabled: %s" % LOGGING)
+
 
 # Initialize 'NAPI' and 'nest_temperature'
 global NAPI
@@ -295,7 +275,7 @@ if OWM_API:
 
 logger.info("OWM API enabled: %s" % OWM_API)
 
-ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
+ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (BMP_API, OWM_API, NEST_API)
 
 # via https://stackoverflow.com/a/46346184/47850
 exit_sentinel = Event()
@@ -585,19 +565,6 @@ def update_location_sensor():
     RECENT_READINGS['sensor'] = temp_in_F
     location_updated('sensor')
 
-
-def display_location_temperature(location):
-    temperature_in_F = RECENT_READINGS[location]
-    temperature_digits = get_temperature_digits_in_fahrenheit(
-        temperature_in_F, location
-    )
-    # logger.info(temperature_digits
-    try:
-        display_temperature_digits(temperature_digits, display_handle=segment)
-    except IOError:
-        pass
-
-
 ERROR_TABLES = {}
 PRINT_ERROR_TABLES_ON_LOGGING = True
 
@@ -616,7 +583,8 @@ def log_error(error_type='UnknownError'):
 
 def main():
     global ALTERNATE_TEMPERATURE_LOCATION_ENABLES
-
+    global segment
+    global RECENT_READINGS
     try:
         logger.info(
             "Using temperature display I2C address: 0x%02x"
@@ -658,7 +626,7 @@ def main():
             # logger.debug("Updating %s" % current_location)
             update_location(current_location)
 
-        display_location_temperature(current_location)
+        display_location_temperature(current_location, RECENT_READINGS, segment)
 
         if is_time_to_upload(start_time):
             log_data()
@@ -673,7 +641,7 @@ def main():
             )
         )
         # FIXME: refactor to delegate this to a common function
-        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
+        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (BMP_API, OWM_API, NEST_API)
 
     graceful_exit()
 

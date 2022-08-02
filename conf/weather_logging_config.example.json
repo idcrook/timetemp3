@@ -16,5 +16,11 @@
   "i2c_addresses": {
     "i2c_led": "0x70",
     "bmp085": "0x77"
+  },
+  "global": {
+    "enable_logging": true,
+    "enable_bmp_api": true,
+    "enable_owm_api": true,
+    "enable_nest_api": false
   }
 }
