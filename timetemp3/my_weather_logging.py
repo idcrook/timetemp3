@@ -20,16 +20,20 @@ import signal
 from threading import Event
 import requests  # so can handle exceptions
 
+import timetemp3
+from timetemp3 import constants
 from timetemp3 import (
     get_temperature_sensor_handle,
     initialize_and_get_temperature_display_handle,
+)
+from timetemp3.temperature import (
     get_temperature_digits_in_fahrenheit,
     display_temperature_digits,
 )
 
 from phant3.Phant import Phant
 
-# FIXME: Refactor into timetemp3/__init__.py
+# FIXME: Refactor into timetemp3/__init__.py or a new sensor.py
 import nest  # https://github.com/jkoelker/python-nest/
 from pyowm.owm import OWM  # https://github.com/csparpa/pyowm
 from pyowm.commons import exceptions as OwmExceptions
@@ -134,8 +138,8 @@ UPDATE_PREVIOUS_TIMES = [None] * len(ALTERNATE_TEMPERATURE_LOCATIONS)
 UPDATE_CYCLE_NUMBERS = [-1 for i in range(len(ALTERNATE_TEMPERATURE_LOCATIONS))]
 # Use -1 to represent that update is always requests if not yet initialized
 
-BMP_ADDRESS = 0x77
-LED_DISPLAY_ADDRESS = 0x71
+BMP_ADDRESS = constants.DEFAULT_TEMPERATURE_BMP_SENSOR_I2C_ADDRESS
+LED_DISPLAY_ADDRESS = constants.DEFAULT_TEMPERATURE_LED_SEGMENT_I2C_ADDRESS
 DISPLAY_SLEEP_DURATION = 1 / 100
 # VERBOSE_BMP_READINGS = True
 VERBOSE_BMP_READINGS = False

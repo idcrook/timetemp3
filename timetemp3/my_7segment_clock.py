@@ -12,18 +12,21 @@ import signal
 import sys
 from sys import exit
 
+import timetemp3
+from timetemp3 import constants
 from timetemp3 import (
     initialize_and_get_time_display_handle,
+)
+from timetemp3.time import (
     get_time_digits,
     display_time_digits,
 )
 
 # Set to 12 or 24 hour mode
-DEFAULT_HOUR_MODE_12_OR_24 = 12
+DEFAULT_HOUR_MODE_12_OR_24 = constants.DEFAULT_CLOCK_HOUR_MODE_12_OR_24
 
 # I2C address of display
-DEFAULT_LED_SEGMENT_I2C_ADDRESS = 0x70
-# 0x70 == 112
+DEFAULT_LED_SEGMENT_I2C_ADDRESS = constants.DEFAULT_CLOCK_LED_SEGMENT_I2C_ADDRESS
 
 # Number of seconds to wait after display is written
 DISPLAY_SLEEP_DURATION = 1 / 4
