@@ -24,7 +24,7 @@ sudo apt install -y git build-essential python3-setuptools python3-dev \
 sudo apt install python3-systemd
 
 # additional system dependencies for Adafruit-LED-Backpack
-sudo apt install python3-smbus python3-pil
+#sudo apt install python3-smbus python3-pil
 ```
 
 now for the fun part
@@ -35,11 +35,12 @@ cd ~/projects
 git clone https://github.com/idcrook/timetemp3.git
 cd ~/projects/timetemp3
 
-python3 -m venv .venv
+# --system-site-packages used for python3-systemd
+python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 
 # work-around for geojson dependency from pyowm
-pip install geojson requests
+#pip install geojson requests
 
 # perform the python setup, which also includes dependencies
 pip install .
@@ -81,7 +82,7 @@ On my Raspberry Pi OS system, `groups` includes "`gpio i2c`" so these services d
 Install user unit file. Assumes git clone at `/home/pi/projects/timetemp3/` and has been installed
 
 ```shell
-# needed for `host` command
+# needed for `host` command that does network connectivity check
 sudo apt install bind9-host
 cd /home/pi/projects/timetemp3/
 conf/install_services.sh
