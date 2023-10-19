@@ -132,3 +132,5 @@ dmypy.json
 # Local
 nest.json
 .vscode/settings.json
+
+timetemp3/version.py

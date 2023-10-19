@@ -25,9 +25,6 @@ sudo apt install python3-systemd
 
 # additional system dependencies for Adafruit-LED-Backpack
 sudo apt install python3-smbus python3-pil
-
-# work-around for geojson dependency from pyowm 
-pip3 install --user geojson
 ```
 
 now for the fun part
@@ -38,10 +35,16 @@ cd ~/projects
 git clone https://github.com/idcrook/timetemp3.git
 cd ~/projects/timetemp3
 
+python3 -m venv .venv
+source .venv/bin/activate
+
+# work-around for geojson dependency from pyowm
+pip install geojson requests
+
 # perform the python setup, which also includes dependencies
-pip3 install .
-# for development, use instead 
-pip3 install -e .
+pip install .
+# for development, use instead
+pip install -e .
 ```
 
 Run
@@ -57,10 +60,11 @@ touch conf/phant-config.json
 # replace conf/phant-config.json with a phant data source config file
 ```
 
-Assuming your system is setup to include `~/.local/bin` in `$PATH`, can run the `timetemp_*` wrapper scripts the Python `setup.py` installed
+Using venv, can run the `timetemp_*` wrapper scripts the Python `setup.py` installed
 
 ```shell
 cd ~/projects/timetemp3
+source .venv/bin/activate
 
 timetemp_7segment_clock
 # <Ctrl-C> to exit
@@ -77,6 +81,8 @@ On my Raspberry Pi OS system, `groups` includes "`gpio i2c`" so these services d
 Install user unit file. Assumes git clone at `/home/pi/projects/timetemp3/` and has been installed
 
 ```shell
+# needed for `host` command
+sudo apt install bind9-host
 cd /home/pi/projects/timetemp3/
 conf/install_services.sh
 ```
@@ -89,8 +95,8 @@ Test
 # run tests from setup
 python3 setup.py test
 
-# manually run tests
-pip3 install nose
+# manually run tests (pynose is nose fixed to run in >=python3.10)
+pip install pynose
 nosetests
 ```
 

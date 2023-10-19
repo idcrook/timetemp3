@@ -1,9 +1,10 @@
 #+STARTUP: showeverything
 
+* meta
+ - [ ] Switch completely from nose/pynose to pytest
+
 * test display formatting
 
 * test hardware access (i2c devices)
 
 * test network calls
-
-
