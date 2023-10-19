@@ -72,7 +72,7 @@ def main():
     INVOCATION_ID = os.getenv('INVOCATION_ID')
     if INVOCATION_ID is not None:
         from systemd import journal
-        jH = journal.JournalHandler()
+        jH = journal.JournalHandler(SYSLOG_IDENTIFIER="my_7segment_clock")
         jH.setLevel(VERBOSITY)
         formatter = logging.Formatter('%(levelname)s - %(message)s')
         jH.setFormatter(formatter)

@@ -20,11 +20,6 @@ Install pre-reqs and dependencies
 sudo apt install -y git build-essential python3-setuptools python3-dev \
     python3-pip python3-venv python3-wheel
 
-# for extra systemd functionality
-sudo apt install python3-systemd
-
-# additional system dependencies for Adafruit-LED-Backpack
-#sudo apt install python3-smbus python3-pil
 ```
 
 now for the fun part
@@ -35,12 +30,12 @@ cd ~/projects
 git clone https://github.com/idcrook/timetemp3.git
 cd ~/projects/timetemp3
 
-# --system-site-packages used for python3-systemd
-python3 -m venv --system-site-packages .venv
+#
+python3 -m venv .venv
 source .venv/bin/activate
 
-# work-around for geojson dependency from pyowm
-#pip install geojson requests
+# workaround for pyowm dependencies (move to build dependencies??)
+pip install geojson requests
 
 # perform the python setup, which also includes dependencies
 pip install .
@@ -86,6 +81,9 @@ Install user unit file. Assumes git clone at `/home/pi/projects/timetemp3/` and 
 sudo apt install bind9-host
 cd /home/pi/projects/timetemp3/
 conf/install_services.sh
+
+journalctl --user --identifier="my_7segment_clock"
+journalctl --user --identifier="my_weather_logging"
 ```
 
 
