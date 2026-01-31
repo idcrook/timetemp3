@@ -122,8 +122,7 @@ def main():
         logger.fatal(f"Unexpected {err=}, {type(err)=}")
         raise
     else:
-        logger.info(dir(display))
-        #logger.info("Using clock display I2C address: 0x%02x" % (display._device._address,))
+        logger.info("Using clock display I2C address: 0x%02x" % (display.i2c_device[0].device_address,))
 
 
     def graceful_exit():

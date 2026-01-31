@@ -71,16 +71,10 @@ def display_time_digits(
         #display.fill(0)
         # display.bottom_left_dot = True
         # display.top_left_dot = True
-        # display.set_digit(DIGIT_1, time_digits[DIGIT_1])
-        # display.set_digit(DIGIT_2, time_digits[DIGIT_2])
-        # display.set_digit(DIGIT_3, time_digits[DIGIT_3])
-        # display.set_digit(DIGIT_4, time_digits[DIGIT_4])
-        # display.set_colon(time_digits[DIGIT_COLON])
         display[DIGIT_1] = str(time_digits[DIGIT_1])
         display[DIGIT_2] = str(time_digits[DIGIT_2])
         display[DIGIT_3] = str(time_digits[DIGIT_3])
         display[DIGIT_4] = str(time_digits[DIGIT_4])
-        #display.colon = time_digits[DIGIT_COLON]
         display.colons[0] = time_digits[SEGMENT_COLON]
         display.ampm = time_digits[SEGMENT_AMPM]
 

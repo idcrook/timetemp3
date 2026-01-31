@@ -197,7 +197,7 @@ nest_client_secret = config['timetemp_nest']['client_secret']
 nest_access_token_cache_file = 'nest.json'
 
 # Create display instance
-segment = initialize_and_get_temperature_display_handle(i2c_address=led_display_address)
+display = initialize_and_get_temperature_display_handle(i2c_address=led_display_address)
 
 # Create sensor instance
 bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
@@ -593,7 +593,7 @@ def display_location_temperature(location):
     )
     # logger.info(temperature_digits
     try:
-        display_temperature_digits(temperature_digits, display_handle=segment)
+        display_temperature_digits(temperature_digits, display_handle=display)
     except IOError:
         pass
 
@@ -620,7 +620,7 @@ def main():
     try:
         logger.info(
             "Using temperature display I2C address: 0x%02x"
-            % (segment._device._address,)
+            % (display._device._address,)
         )
         logger.info(
             "Using temperature sensor I2C address: 0x%02x" % (bmp._device._address,)
@@ -630,8 +630,8 @@ def main():
 
     def graceful_exit():
         # Turn off LED
-        segment.clear()
-        segment.write_display()
+        display.fill(0)
+        display.show()
         sys.exit(0)
 
     # Register signal handler

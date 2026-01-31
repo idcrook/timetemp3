@@ -43,9 +43,14 @@ def get_temperature_sensor_handle(i2c_address=DEFAULT_TEMPERATURE_BMP_SENSOR_I2C
 def initialize_and_get_temperature_display_handle(
     i2c_address=DEFAULT_TEMPERATURE_LED_SEGMENT_I2C_ADDRESS,
 ):
-    segment = SevenSegment.SevenSegment(address=i2c_address)
-    # Initialize display. Must be called once before using the display.
-    segment.begin()
-    return segment
+    i2c = board.I2C()
+    display = BigSeg7x4(i2c, address=i2c_address)
+    
+    # Clear display.
+    display.fill(0)
+    display.show()
+ 
+    return display
+
 
 

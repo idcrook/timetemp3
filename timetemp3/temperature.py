@@ -5,15 +5,14 @@
 
 import time
 
-from Adafruit_LED_Backpack import SevenSegment
-
 import timetemp3
 from timetemp3.constants import (
     DIGIT_1,
     DIGIT_2,
     DIGIT_3,
     DIGIT_4,
-    DIGIT_COLON,
+    SEGMENT_COLON,
+    SEGMENT_AMPM,
     DEFAULT_TEMPERATURE_LED_SEGMENT_I2C_ADDRESS,
     DEFAULT_TEMPERATURE_BMP_SENSOR_I2C_ADDRESS,
     DEFAULT_TEMPERATURE_DISPLAY_SLEEP_DURATION,
@@ -49,7 +48,7 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
 
     # these are mostly constant
     digits[DIGIT_4] = 'F'
-    digits[DIGIT_COLON] = False
+    digits[SEGMENT_COLON] = False
 
     if round(temperature * 10.0) >= 995.0:  # 99.5 degrees or above : "###F"
         digits[DIGIT_1] = int(round(temperature) / 100)  # Hundreds
@@ -81,7 +80,7 @@ def get_temperature_digits_in_fahrenheit(temperature, where):
         digits[DIGIT_2] = 'E'
         digits[DIGIT_3] = 'E'
         digits[DIGIT_4] = 'E'
-        digits[DIGIT_COLON] = True
+        digits[SEGMENT_COLON] = True
 
     return digits
 
@@ -91,24 +90,26 @@ def display_temperature_digits(
     sleep_duration=DEFAULT_TEMPERATURE_DISPLAY_SLEEP_DURATION,
     display_handle=None,
 ):
-    segment = display_handle
+    display = display_handle
 
-    if segment:
-        segment.clear()
+    if display:
+        # Clear display
+        display.fill(0)
+        display.show()
 
-        segment.set_digit(DIGIT_1, temperature_digits[DIGIT_1])
-        segment.set_digit(DIGIT_2, temperature_digits[DIGIT_2])
+        display[DIGIT_1] = str(temperature_digits[DIGIT_1])
+        display[DIGIT_2] = str(temperature_digits[DIGIT_2])
         if isinstance(temperature_digits[DIGIT_3], int):
-            segment.set_digit_raw(DIGIT_3, temperature_digits[DIGIT_3])
+            display.set_digit_raw(DIGIT_3, temperature_digits[DIGIT_3])
         else:
-            segment.set_digit(DIGIT_3, temperature_digits[DIGIT_3])
+            display[DIGIT_3] = str(temperature_digits[DIGIT_3])
 
-        segment.set_digit(DIGIT_4, temperature_digits[DIGIT_4])
-        segment.set_colon(temperature_digits[DIGIT_COLON])
+        display[DIGIT_4] = str(temperature_digits[DIGIT_4])
+        display.colons[0] = temperature_digits[SEGMENT_COLON]
 
         # Write the display buffer to the hardware.  This must be called to
         # update the actual display LEDs.
-        segment.write_display()
+        #display.show()
 
         # sleep_duration should be less than 1 second to prevent colon jittering
         time.sleep(sleep_duration)
