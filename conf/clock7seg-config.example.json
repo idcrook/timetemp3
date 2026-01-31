@@ -1,4 +1,5 @@
 {
   "led_disp_i2c_addr": 113,
+  "show_ampm": false,
   "hour_mode": 24
 }

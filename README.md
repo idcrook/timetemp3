@@ -19,7 +19,7 @@ Install pre-reqs and dependencies
 # python and build system dependencies
 sudo apt install -y git build-essential python3-setuptools python3-dev \
     python3-pip python3-venv python3-wheel
-
+sudo apt install libsystemd-dev
 ```
 
 now for the fun part
@@ -35,7 +35,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # workaround for pyowm dependencies (move to build dependencies??)
-pip install geojson requests
+#pip install geojson requests
 
 # perform the python setup, which also includes dependencies
 pip install .

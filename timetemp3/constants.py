@@ -6,10 +6,14 @@ DIGIT_1 = 0
 DIGIT_2 = 1
 DIGIT_3 = 2
 DIGIT_4 = 3
-DIGIT_COLON = 4
+SEGMENT_COLON = 4
+SEGMENT_AMPM = 5
 
 # Default to 12 or 24 hour mode
 DEFAULT_CLOCK_HOUR_MODE_12_OR_24 = 12
+
+# Default to 12 or 24 hour mode
+DEFAULT_CLOCK_SHOW_AMPM = False
 
 # Default number of seconds to wait after display is written
 DEFAULT_CLOCK_DISPLAY_SLEEP_DURATION = 1 / 4
