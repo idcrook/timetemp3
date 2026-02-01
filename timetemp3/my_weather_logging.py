@@ -7,6 +7,7 @@
 #    - log sensor data to a phant server
 #    - log external weather data (read from Web API)
 
+import asyncio
 import logging
 import os
 import sys
@@ -19,6 +20,9 @@ from pprint import pformat
 import signal
 from threading import Event
 import requests  # so can handle exceptions
+
+from wittiot import API
+from aiohttp import ClientSession
 
 import timetemp3
 from timetemp3 import constants
@@ -45,6 +49,7 @@ usage = """
 # these are for debug output, not data logging
 logger = logging.getLogger('weather_logger')
 VERBOSITY = logging.INFO  # set to logging.DEBUG for more verbose
+#VERBOSITY = logging.DEBUG  
 logger.setLevel(VERBOSITY)
 
 # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
@@ -111,6 +116,9 @@ SENSOR_MEASUREMENT_INTERVAL = 15
 # Default time to wait before hitting API again.
 WEBAPI_PERIOD_SECONDS = 5 * 60
 
+# Default time to wait before hitting API again.
+LOCAL_API_PERIOD_SECONDS = 2 * 60
+
 # Use Open Weather Map API for local weather
 # - https://openweathermap.org/api
 # - https://openweathermap.org/api/one-call-api
@@ -118,19 +126,28 @@ OWM_API = True
 # OWM_API = False
 OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
+# FIXME: switch to smart thermostat
 # Use Nest API for another indoor temperature source
 NEST_API = True
 NEST_API = False
 NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
+# Use Nest API for another indoor temperature source
+STATION_API = True
+# STATION_API = False
+STATION_REFRESH_INTERVAL = LOCAL_API_PERIOD_SECONDS
+
+
 # How long to wait (in seconds) between temperature locations, the key wait
 # value for display loop
-ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 3.3
-ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
+ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 2.3
+#ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
+ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest', 'station')
 UPDATE_LOCATION_INTERVALS = (
     SENSOR_MEASUREMENT_INTERVAL,
     OWM_REFRESH_INTERVAL,
     NEST_REFRESH_INTERVAL,
+    STATION_REFRESH_INTERVAL,
 )
 UPDATE_PREVIOUS_TIMES = [None] * len(ALTERNATE_TEMPERATURE_LOCATIONS)
 
@@ -143,12 +160,14 @@ LED_DISPLAY_ADDRESS = constants.DEFAULT_TEMPERATURE_LED_SEGMENT_I2C_ADDRESS
 DISPLAY_SLEEP_DURATION = 1 / 100
 # VERBOSE_BMP_READINGS = True
 VERBOSE_BMP_READINGS = False
+WEATHER_HUB_ADDR = constants.DEFAULT_LOCAL_WEATHER_HUB_ADDR
 
 UNINITIALIZED_READING = -100.0
 RECENT_READINGS = {
     ALTERNATE_TEMPERATURE_LOCATIONS[0]: UNINITIALIZED_READING,
     ALTERNATE_TEMPERATURE_LOCATIONS[1]: UNINITIALIZED_READING,
     ALTERNATE_TEMPERATURE_LOCATIONS[2]: UNINITIALIZED_READING,
+    ALTERNATE_TEMPERATURE_LOCATIONS[3]: UNINITIALIZED_READING,
 }
 
 try:
@@ -195,6 +214,9 @@ nest_client_id = config['timetemp_nest']['client_id']
 nest_client_secret = config['timetemp_nest']['client_secret']
 # FIXME: more rrobustly form/check path
 nest_access_token_cache_file = 'nest.json'
+
+weather_hub_addr = config.get("wittiot", {}).get('lan_address', WEATHER_HUB_ADDR)
+
 
 # Create display instance
 display = initialize_and_get_temperature_display_handle(i2c_address=led_display_address)
@@ -295,7 +317,18 @@ if OWM_API:
 
 logger.info("OWM API enabled: %s" % OWM_API)
 
-ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
+# Initialize 'NAPI' and 'nest_temperature'
+global WSAPI
+WSAPI = None
+if STATION_API:
+    station_temperature = 35.0
+    #WSAPI = ..
+
+logger.info("Weather Station API enabled: %s" % STATION_API)
+logger.info("Weather Station hub address: %s" % weather_hub_addr)
+
+
+ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API, True)
 
 # via https://stackoverflow.com/a/46346184/47850
 exit_sentinel = Event()
@@ -363,13 +396,15 @@ def is_time_to_upload(start_time):
         return False
 
 
-def update_location(location='sensor'):
+async def update_location(location='sensor'):
     if location == 'sensor':
         update_location_sensor()
     elif location == 'nest':
         update_location_nest()
     elif location == 'outdoor':
         update_location_owm()
+    elif location == 'station':
+        await update_location_weather_station()
 
 
 def location_updated(location):
@@ -477,6 +512,33 @@ def update_location_owm():
         except:
             logger.error("OWM: Unexpected error: %s" % sys.exc_info()[0])
             raise
+
+async def update_location_weather_station():
+    global STATION_API
+
+    if STATION_API:
+
+        async with ClientSession() as session:
+            try:
+                api = API(ip = weather_hub_addr, session=session)
+                res = await api._request_loc_allinfo()
+                #print(res)
+                #_LOGGER.info("_request_loc_allinfo==============: %s", res)
+                #print(res['tempf'])
+                station_temperature = 42
+                try:
+                    station_temperature = res['tempf']
+                    RECENT_READINGS['station'] = station_temperature
+                    location_updated('station')
+
+                except UnboundLocalError as e:
+                    logger.error("Ecowitt: API Failed: %s" % e)
+            except:
+                logger.error("Ecowitt: Unexpected error: %s" % sys.exc_info()[0])
+                raise
+            finally:
+                pass
+
 
 
 def log_data():
@@ -614,7 +676,7 @@ def log_error(error_type='UnknownError'):
         logger.warning("error tables: %s", ERROR_TABLES)
 
 
-def main():
+async def main() -> None:
     global ALTERNATE_TEMPERATURE_LOCATION_ENABLES
 
     try:
@@ -655,8 +717,8 @@ def main():
             continue
 
         if is_time_to_update(start_time, current_location):
-            # logger.debug("Updating %s" % current_location)
-            update_location(current_location)
+            logger.debug("Updating %s" % current_location)
+            await update_location(current_location)
 
         display_location_temperature(current_location)
 
@@ -673,10 +735,15 @@ def main():
             )
         )
         # FIXME: refactor to delegate this to a common function
-        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API)
+        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API, True)
 
     graceful_exit()
 
 
+def run():
+    """Wrapper function for the entry point."""
+    asyncio.run(main())
+
+
 if __name__ == '__main__':
-    main()
+    run()

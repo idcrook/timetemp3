@@ -16,5 +16,9 @@
   "i2c_addresses": {
     "i2c_led": "0x70",
     "bmp085": "0x77"
+  },
+  "wittiot": {
+      "lan_address": "192.168.1.10"
   }
+
 }

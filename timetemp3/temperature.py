@@ -19,6 +19,7 @@ from timetemp3.constants import (
     OUTDOOR_SYMBOL_ENCODING,
     TICKMARK_SYMBOL_ENCODING,
     DEGREES_SYMBOL_ENCODING,
+    STATION_SYMBOL_ENCODING,
 )
 
 # Additional characters for 7 segment display
@@ -26,6 +27,7 @@ TEMPERATURE_RAW_DIGIT_VALUES = {
     'tickmark':        TICKMARK_SYMBOL_ENCODING,
     'outdoor_degrees': OUTDOOR_SYMBOL_ENCODING,
     '°':               DEGREES_SYMBOL_ENCODING,
+    'station':         STATION_SYMBOL_ENCODING,
 }
 
 
@@ -35,6 +37,8 @@ def _lookup_where_temperature_digit(where):
         raw_value = TEMPERATURE_RAW_DIGIT_VALUES['outdoor_degrees']
     elif where == 'nest':
         raw_value = TEMPERATURE_RAW_DIGIT_VALUES['°']
+    elif where == 'station':
+        raw_value = TEMPERATURE_RAW_DIGIT_VALUES['station']
     else:
         raw_value = TEMPERATURE_RAW_DIGIT_VALUES['tickmark']
     return raw_value
