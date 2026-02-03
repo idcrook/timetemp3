@@ -16,6 +16,7 @@ import Adafruit_BMP.BMP085 as BMP085
 
 import board
 from adafruit_ht16k33.segments import BigSeg7x4
+import adafruit_bmp280
 
 import timetemp3
 from timetemp3.constants import (
@@ -27,16 +28,23 @@ from timetemp3.constants import (
 def initialize_and_get_time_display_handle(i2c_address=DEFAULT_CLOCK_LED_SEGMENT_I2C_ADDRESS):
     i2c = board.I2C()
     display = BigSeg7x4(i2c, address=i2c_address)
-    
+
     # Clear display.
     display.fill(0)
     display.show()
- 
+
     return display
 
 
-def get_temperature_sensor_handle(i2c_address=DEFAULT_TEMPERATURE_BMP_SENSOR_I2C_ADDRESS):
-    bmp = BMP085.BMP085(mode=BMP085.BMP085_HIGHRES, address=i2c_address)
+def get_temperature_sensor_handle(
+        i2c_address=DEFAULT_TEMPERATURE_BMP_SENSOR_I2C_ADDRESS,
+        bmp_type="bmp280"):
+    if bmp_type == 'bmp280':
+        i2c = board.I2C()   # uses board.SCL and board.SDA
+        bmp = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
+        # bmp.sea_level_pressure = 1013.25 
+    else:
+        bmp = BMP085.BMP085(mode=BMP085.BMP085_HIGHRES, address=i2c_address)
     return bmp
 
 
@@ -45,12 +53,9 @@ def initialize_and_get_temperature_display_handle(
 ):
     i2c = board.I2C()
     display = BigSeg7x4(i2c, address=i2c_address)
-    
+
     # Clear display.
     display.fill(0)
     display.show()
- 
+
     return display
-
-
-

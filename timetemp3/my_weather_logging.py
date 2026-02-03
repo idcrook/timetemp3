@@ -33,6 +33,7 @@ from timetemp3 import (
 from timetemp3.temperature import (
     get_temperature_digits_in_fahrenheit,
     display_temperature_digits,
+    update_bmp_readings,
 )
 
 from phant3.Phant import Phant
@@ -49,7 +50,7 @@ usage = """
 # these are for debug output, not data logging
 logger = logging.getLogger('weather_logger')
 VERBOSITY = logging.INFO  # set to logging.DEBUG for more verbose
-#VERBOSITY = logging.DEBUG  
+VERBOSITY = logging.DEBUG
 logger.setLevel(VERBOSITY)
 
 # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
@@ -123,7 +124,7 @@ LOCAL_API_PERIOD_SECONDS = 2 * 60
 # - https://openweathermap.org/api
 # - https://openweathermap.org/api/one-call-api
 OWM_API = True
-# OWM_API = False
+OWM_API = False
 OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # FIXME: switch to smart thermostat
@@ -132,7 +133,7 @@ NEST_API = True
 NEST_API = False
 NEST_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
-# Use Nest API for another indoor temperature source
+# Weather station hub API
 STATION_API = True
 # STATION_API = False
 STATION_REFRESH_INTERVAL = LOCAL_API_PERIOD_SECONDS
@@ -141,7 +142,6 @@ STATION_REFRESH_INTERVAL = LOCAL_API_PERIOD_SECONDS
 # How long to wait (in seconds) between temperature locations, the key wait
 # value for display loop
 ALTERNATE_TEMPERATURE_DISPLAY_SECONDS = 2.3
-#ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest')
 ALTERNATE_TEMPERATURE_LOCATIONS = ('sensor', 'outdoor', 'nest', 'station')
 UPDATE_LOCATION_INTERVALS = (
     SENSOR_MEASUREMENT_INTERVAL,
@@ -197,6 +197,10 @@ with open(app_config_json) as config_file:
 # logger.debug(pformat(config))
 logger.debug(pformat(config["i2c_addresses"]))
 
+
+bmp_type = (
+    config["i2c_addresses"].get("bmp_type", "bmp280")
+)
 bmp_address = (
     convert_json_string_to_hexadecimal_value(config["i2c_addresses"]["bmp085"])
     or BMP_ADDRESS
@@ -222,7 +226,7 @@ weather_hub_addr = config.get("wittiot", {}).get('lan_address', WEATHER_HUB_ADDR
 display = initialize_and_get_temperature_display_handle(i2c_address=led_display_address)
 
 # Create sensor instance
-bmp = get_temperature_sensor_handle(i2c_address=bmp_address)
+bmp = get_temperature_sensor_handle(i2c_address=bmp_address, bmp_type=bmp_type)
 
 # logger.debug(pathlib.Path().absolute())
 
@@ -619,24 +623,29 @@ def log_data():
 def update_location_sensor():
     try:
         # Attempt to get sensor readings.
-        temp = bmp.read_temperature()
-        pressure = bmp.read_pressure()
-        altitude = bmp.read_altitude()
+        (temp, pressure, altitude) = update_bmp_readings(bmp)
+        #  = bmp.read_temperature()
+        # pressure = bmp.read_pressure()
+        # altitude = bmp.read_altitude()
 
     except IOError:
         # XXX: Handle/report IOErrors?
         pass
 
     temp_in_F = (temp * 9.0 / 5.0) + 32.0
-    ambient_pressure = pressure / 100.0
-
+    if pressure < 1100.0:
+        ambient_pressure = pressure
+    else:
+        ambient_pressure = pressure / 100.0
+    s = "BMP Sensor" + " "
+    s += "  Temp(°C): %.1f°C" % temp + " "
+    s += "  Temp(°F): %.1f°F" % temp_in_F + " "
+    s += "  Pressure: %.1f hPa" % ambient_pressure + " "
+    s += "  Altitude: %.1f m" % altitude
     if VERBOSE_BMP_READINGS:
-        s = "BMP Sensor" + " "
-        s += "  Temp(°C): %.1f°C" % temp + " "
-        s += "  Temp(°F): %.1f°F" % temp_in_F + " "
-        s += "  Pressure: %.1f hPa" % ambient_pressure + " "
-        s += "  Altitude: %.1f m" % altitude
         logger.info(s)
+    else:
+        logger.debug(s)
 
     # save values for periodic logging
     LOGGING_DATA['in_humid'] = 0
@@ -735,7 +744,8 @@ async def main() -> None:
             )
         )
         # FIXME: refactor to delegate this to a common function
-        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API, True)
+        ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, OWM_API, NEST_API, STATION_API)
+        # ALTERNATE_TEMPERATURE_LOCATION_ENABLES = (True, False, False, True)
 
     graceful_exit()
 

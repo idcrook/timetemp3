@@ -117,3 +117,20 @@ def display_temperature_digits(
 
         # sleep_duration should be less than 1 second to prevent colon jittering
         time.sleep(sleep_duration)
+
+def update_bmp_readings(bmp, bmp_type='bmp280'):
+
+    temperature = 0.0
+    pressure = 0.0
+    altitude = 0.0
+
+    if bmp_type == 'bmp280':
+        temperature = bmp.temperature
+        pressure = bmp.pressure
+        altitude = bmp.altitude
+    else:
+        temperature = bmp.read_temperature()
+        pressure = bmp.read_pressure()
+        altitude = bmp.read_altitude()
+
+    return (temperature, pressure, altitude)
