@@ -16,6 +16,7 @@ import timetemp3
 from timetemp3 import constants
 from timetemp3 import (
     initialize_and_get_time_display_handle,
+    set_display_brightness,
 )
 from timetemp3.time import (
     get_time_digits,
@@ -114,7 +115,7 @@ def main():
     display = None
     try:
         display = initialize_and_get_time_display_handle(i2c_address=LED_SEGMENT_I2C_ADDRESS)
-        display.brightness = 0.2
+        set_display_brightness(display, brightness = 0.2)
     except FileNotFoundError as efnf:
         logger.fatal("Unable to find I2C devices: {0}".format(efnf))
         raise SystemExit

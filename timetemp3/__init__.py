@@ -25,13 +25,19 @@ from timetemp3.constants import (
     DEFAULT_TEMPERATURE_BMP_SENSOR_I2C_ADDRESS,
 )
 
+def set_display_brightness(display, brightness: float = 0.8):
+    if brightness < 0.0 or brightness > 1.0:
+        brightness = 0.8
+    display.brightness = brightness
+
 def initialize_and_get_time_display_handle(i2c_address=DEFAULT_CLOCK_LED_SEGMENT_I2C_ADDRESS):
     i2c = board.I2C()
     display = BigSeg7x4(i2c, address=i2c_address)
 
     # Clear display.
     display.fill(0)
-    display.show()
+    #display.show()
+    set_display_brightness(display)
 
     return display
 
@@ -56,6 +62,7 @@ def initialize_and_get_temperature_display_handle(
 
     # Clear display.
     display.fill(0)
-    display.show()
+    #display.show()
+    set_display_brightness(display)
 
     return display
