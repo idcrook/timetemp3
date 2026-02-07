@@ -50,7 +50,7 @@ usage = """
 # these are for debug output, not data logging
 logger = logging.getLogger('weather_logger')
 VERBOSITY = logging.INFO  # set to logging.DEBUG for more verbose
-VERBOSITY = logging.DEBUG
+# VERBOSITY = logging.DEBUG
 logger.setLevel(VERBOSITY)
 
 # systemd v232 INVOCATION_ID environment variable. You can check if that’s set or not.
@@ -623,7 +623,7 @@ def log_data():
 def update_location_sensor():
     try:
         # Attempt to get sensor readings.
-        (temp, pressure, altitude) = update_bmp_readings(bmp)
+        (temp, pressure, altitude) = update_bmp_readings(bmp, bmp_type=bmp_type)
         #  = bmp.read_temperature()
         # pressure = bmp.read_pressure()
         # altitude = bmp.read_altitude()
