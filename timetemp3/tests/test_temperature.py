@@ -7,10 +7,12 @@ from timetemp3.constants import (
     DIGIT_2,
     DIGIT_3,
     DIGIT_4,
-    DIGIT_COLON,
+    SEGMENT_COLON,
+    SEGMENT_AMPM,
     OUTDOOR_SYMBOL_ENCODING,
     TICKMARK_SYMBOL_ENCODING,
     DEGREES_SYMBOL_ENCODING,
+    STATION_SYMBOL_ENCODING,
 )
 
 
@@ -27,11 +29,11 @@ class TestTemperatureDigits(TestCase):
     def test_is_range_p99p9(self):
         digits = temperature.get_temperature_digits_in_fahrenheit(99.9, 'outdoor')
         self.assertEqual(digits, [1, 0, '0', 'F', False])
-    
+
     def test_is_range_p99p5(self):
         digits = temperature.get_temperature_digits_in_fahrenheit(99.5, 'outdoor')
         self.assertEqual(digits, [1, 0, '0', 'F', False])
-    
+
     def test_is_range_p10_to_p99(self):
         digits = temperature.get_temperature_digits_in_fahrenheit(68.0, 'nest')
         self.assertEqual(digits, [6, 8, DEGREES_SYMBOL_ENCODING, 'F', False])
@@ -57,8 +59,8 @@ class TestTemperatureDigits(TestCase):
         self.assertEqual(digits, ['-', 1, OUTDOOR_SYMBOL_ENCODING, 'F', False])
 
     def test_is_range_n9_to_n0_B(self):
-        digits = temperature.get_temperature_digits_in_fahrenheit(-9.4, 'outdoor')
-        self.assertEqual(digits, ['-', 9, OUTDOOR_SYMBOL_ENCODING, 'F', False])
+        digits = temperature.get_temperature_digits_in_fahrenheit(-9.4, 'station')
+        self.assertEqual(digits, ['-', 9, STATION_SYMBOL_ENCODING, 'F', False])
 
     def test_is_range_n9_to_n0_C(self):
         digits = temperature.get_temperature_digits_in_fahrenheit(-4.35, 'outdoor')

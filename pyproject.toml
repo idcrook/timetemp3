@@ -1,12 +1,79 @@
 [build-system]
- requires = [
-     "setuptools >= 48",
-     "setuptools_scm[toml] >= 4, <6",
-     "setuptools_scm_git_archive",
-     "wheel >= 0.29.0",
- ]
- build-backend = 'setuptools.build_meta'
+  requires = ["setuptools", "setuptools-scm"]
+  build-backend = 'setuptools.build_meta'
 
 [tool.setuptools_scm]
  write_to = "timetemp3/version.py"
  git_describe_command = "git describe --dirty --tags --long --match v* --first-parent"
+
+
+[project]
+ name = "timetemp3"
+ authors = [
+   { name="David Crook", email="idcrook@users.noreply.github.com"},
+ ]
+ description = "Display time/temperature on Raspberry Pi and log to cloud"
+ readme = "README.md"
+ requires-python = ">=3.7"
+ dynamic = ["version"]
+ classifiers = [
+         "Programming Language :: Python :: 3",
+         "Operating System :: POSIX :: Linux",
+         "Natural Language :: English",
+         "Topic :: Home Automation",
+         "Topic :: System :: Hardware",
+         "Topic :: System :: Logging",
+         "Topic :: System :: Monitoring",
+         "Environment :: Console"
+ ]
+ license = "MIT"
+ license-files = ["LICEN[CS]E*"]
+ dependencies = [
+              "systemd-python",
+              "python-nest>=4.2.0",
+              "Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@1.5.4",
+              "adafruit-circuitpython-ht16k33",
+              "adafruit-circuitpython-bmp280",
+              "phant3 @ git+https://github.com/idcrook/python3-phant.git@main",
+              "pyowm @ git+https://github.com/idcrook/pyowm.git",
+              "wittiot"
+ ]
+
+[project.urls]
+  Source = "https://github.com/idcrook/timetemp3"
+  Tracker = "https://github.com/idcrook/timetemp3/issues"
+
+[tool.setuptools.dynamic]
+  #version= { attr = "timetemp3.__version__" }
+  version= { attr = "timetemp3.version.version" }
+
+[project.scripts]
+  timetemp_7segment_clock = "timetemp3.my_7segment_clock:main"
+  timetemp_weather_logging = "timetemp3.my_weather_logging:run"
+
+
+[tool.setuptools.packages]
+  find = { exclude = [
+      "etc*",
+      "conf*",
+      "docs*",
+      "timetemp3.tests*"
+      ] }
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pycodestyle",
+    "pytest-cov"
+]
+all = [
+    "test_self_dep[dev]"
+]
+
+
+[tool.pytest]
+testpaths = ["timetemp3/tests"]
+python_files = ["test_*.py"]
+addopts = ["-q", "--cov=timetemp3", "--cov-report=term-missing"]
+#addopts = ["-q"]

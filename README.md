@@ -34,13 +34,13 @@ cd ~/projects/timetemp3
 python3 -m venv .venv
 source .venv/bin/activate
 
-# workaround for pyowm dependencies (move to build dependencies??)
-#pip install geojson requests
-
-# perform the python setup, which also includes dependencies
+# perform the python setup, which installs dependencies
 pip install .
-# for development, use instead
-pip install -e .
+
+#  ... OR ...
+
+# for editable development and testing, use instead
+pip install -e ".[dev]"
 ```
 
 Run
@@ -90,13 +90,12 @@ journalctl --user --identifier="my_weather_logging"
 Test
 ====
 
-```shell
-# run tests from setup
-python3 setup.py test
+Requires an install for development (instructions above)
 
-# manually run tests (pynose is nose fixed to run in >=python3.10)
-pip install pynose
-nosetests
+```shell
+source .venv/bin/activate
+
+pytest
 ```
 
 TODO
