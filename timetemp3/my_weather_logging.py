@@ -124,7 +124,7 @@ LOCAL_API_PERIOD_SECONDS = 2 * 60
 # - https://openweathermap.org/api
 # - https://openweathermap.org/api/one-call-api
 OWM_API = True
-OWM_API = False
+# OWM_API = False
 OWM_REFRESH_INTERVAL = WEBAPI_PERIOD_SECONDS
 
 # FIXME: switch to smart thermostat
