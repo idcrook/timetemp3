@@ -22,6 +22,8 @@ from threading import Event
 import requests  # so can handle exceptions
 
 from wittiot import API
+from wittiot.errors import RequestError as wittiot_RequestError
+
 from aiohttp import ClientSession
 
 import timetemp3
@@ -524,6 +526,7 @@ async def update_location_weather_station():
 
         async with ClientSession() as session:
             try:
+                # FIXME: no need to re-create api object every time
                 api = API(ip = weather_hub_addr, session=session)
                 res = await api._request_loc_allinfo()
                 #print(res)
@@ -534,11 +537,14 @@ async def update_location_weather_station():
                     station_temperature = res['tempf']
                     RECENT_READINGS['station'] = station_temperature
                     location_updated('station')
-
+                # one failure mode of API
                 except UnboundLocalError as e:
                     logger.error("Ecowitt: API Failed: %s" % e)
-            except:
-                logger.error("Ecowitt: Unexpected error: %s" % sys.exc_info()[0])
+            # likely from hub or network being down
+            except wittiot_RequestError as errReq:
+                logger.error("Ecowitt: RequestError: %s" % errReq)
+                logger.error("Will try again later.")
+            except e:
                 raise
             finally:
                 pass
