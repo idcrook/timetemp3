@@ -544,7 +544,10 @@ async def update_location_weather_station():
             except wittiot_RequestError as errReq:
                 logger.error("Ecowitt: RequestError: %s" % errReq)
                 logger.error("Will try again later.")
-            except e:
+            except TimeoutError as errTimeout:
+                logger.error("Ecowitt: TimeoutError: %s" % errTimeout)
+                logger.error("Will try again later.")
+            except Exception as e:
                 raise
             finally:
                 pass
