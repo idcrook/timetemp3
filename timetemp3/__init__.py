@@ -11,8 +11,12 @@ __maintainer__ = "David Crook"
 __email__ = "idcrook@users.noreply.github.com"
 # __status__ = "Prototype", "Development", or "Production"
 
-import Adafruit_BMP.BMP085 as BMP085
-# from Adafruit_LED_Backpack import SevenSegment
+try: 
+    import Adafruit_BMP.BMP085 as BMP085
+    HAVE_BMP085_LIBRARY = True
+except ImportError:
+    BMP085 = None
+    HAVE_BMP085_LIBRARY = False
 
 import board
 from adafruit_ht16k33.segments import BigSeg7x4
@@ -50,7 +54,10 @@ def get_temperature_sensor_handle(
         bmp = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
         # bmp.sea_level_pressure = 1013.25 
     else:
-        bmp = BMP085.BMP085(mode=BMP085.BMP085_HIGHRES, address=i2c_address)
+        if HAVE_BMP085_LIBRARY:
+            bmp = BMP085.BMP085(mode=BMP085.BMP085_HIGHRES, address=i2c_address)
+        else:
+            bmp = None
     return bmp
 
 

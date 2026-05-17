@@ -20,6 +20,8 @@ Install pre-reqs and dependencies
 sudo apt install -y git build-essential python3-setuptools python3-dev \
     python3-pip python3-venv python3-wheel
 sudo apt install libsystemd-dev
+sudo apt install swig liblgpio-dev # required on RPI 5 for lgpio
+
 ```
 
 now for the fun part
@@ -41,6 +43,7 @@ pip install .
 
 # for editable development and testing, use instead
 pip install -e ".[dev]"
+pip install rpi-lgpio # required on RPI 5 for lgpio
 ```
 
 Run

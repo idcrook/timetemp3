@@ -31,7 +31,8 @@
  dependencies = [
               "systemd-python",
               "python-nest>=4.2.0",
-              "Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@1.5.4",
+              # Legacyy code no longer supported in recent python releases"
+              # Adafruit_BMP @ git+https://github.com/adafruit/Adafruit_Python_BMP.git@1.5.4",
               "adafruit-circuitpython-ht16k33",
               "adafruit-circuitpython-bmp280",
               "phant3 @ git+https://github.com/idcrook/python3-phant.git@main",
@@ -65,6 +66,7 @@
 dev = [
     "pytest",
     "pycodestyle",
+    "coverage",
     "pytest-cov"
 ]
 all = [
